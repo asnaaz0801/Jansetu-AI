@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-fadeIn: fadeIn 0.25s ease-out;
+  --animate-slideDown: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --color-goi-saffron: #FF9933;
+  --color-goi-green: #138808;
+  --color-goi-navy: #000080;
+  --color-goi-gray: #F5F5F5;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+/* Custom CSS Scrollbar and utility styles for light mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
+/* Focus outline accessibility */
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #000080 !important;
+  outline-offset: 1px;
+}
