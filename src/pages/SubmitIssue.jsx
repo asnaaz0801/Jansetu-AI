@@ -915,7 +915,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
         longitude: finalCoords.lng,
         geolocation: `POINT(${finalCoords.lng} ${finalCoords.lat})`,
         status: 'open',
-        citizen_name: user.user_metadata?.full_name || citizenName.trim() || null,
+        citizen_name: citizenName.trim() || null,
         image_url: dbImageUrl,
         created_at: new Date().toISOString()
       };

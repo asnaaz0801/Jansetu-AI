@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/db';
 import emblemOfIndia from '../assets/emblem-of-india.svg';
 import ashokaChakra from '../assets/ashoka-chakra.svg';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ShieldCheck } from 'lucide-react';
 
 const loginTranslations = {
   en: {
@@ -18,7 +18,9 @@ const loginTranslations = {
     loggingIn: "Authenticating...",
     invalidCreds: "Invalid email or password.",
     designedBy: "Designed & Developed by National Informatics Centre (NIC)",
-    securityNotice: "Authorized Access Only. All activities on this portal are logged and monitored."
+    securityNotice: "Authorized Access Only. All activities on this portal are logged and monitored.",
+    signInWithGoogle: "Sign In with Google",
+    onlyAuthorizedMps: "Authorized MPs will be redirected to the dashboard. Citizens will be redirected to the public portal."
   },
   hi: {
     goi: "भारत सरकार",
@@ -32,7 +34,9 @@ const loginTranslations = {
     loggingIn: "प्रमाणित किया जा रहा है...",
     invalidCreds: "अमान्य ईमेल या पासवर्ड।",
     designedBy: "राष्ट्रीय सूचना विज्ञान केंद्र (एनआईसी) द्वारा डिजाइन और विकसित",
-    securityNotice: "केवल अधिकृत पहुंच। इस पोर्टल पर सभी गतिविधियां लॉग और मॉनिटर की जाती हैं।"
+    securityNotice: "केवल अधिकृत पहुंच। इस पोर्टल पर सभी गतिविधियां लॉग और मॉनिटर की जाती हैं।",
+    signInWithGoogle: "गूगल के साथ साइन इन करें",
+    onlyAuthorizedMps: "अधिकृत सांसदों को डैशबोर्ड पर निर्देशित किया जाएगा। नागरिकों को सार्वजनिक पोर्टल पर निर्देशित किया जाएगा।"
   },
   mr: {
     goi: "भारत सरकार",
@@ -46,7 +50,9 @@ const loginTranslations = {
     loggingIn: "प्रमाणित करत आहे...",
     invalidCreds: "अमान्य ईमेल किंवा पासवर्ड.",
     designedBy: "राष्ट्रीय सूचना विज्ञान केंद्र (NIC) द्वारे डिझाइन आणि विकसित",
-    securityNotice: "फक्त अधिकृत प्रवेश. या पोर्टलवरील सर्व क्रियाकलाप लॉग आणि मॉनिटर केले जातात."
+    securityNotice: "फक्त अधिकृत प्रवेश. या पोर्टलवरील सर्व क्रियाकलाप लॉग आणि मॉनिटर केले जातात.",
+    signInWithGoogle: "गूगलने साइन इन करा",
+    onlyAuthorizedMps: "अधिकृत खासदारांना डॅशबोर्डवर निर्देशित केले जाईल. नागरिकांना सार्वजनिक पोर्टलवर निर्देशित केले जाईल।"
   }
 };
 
@@ -54,9 +60,6 @@ export default function MpLogin({ language, highContrast }) {
   const navigate = useNavigate();
   const t = loginTranslations[language] || loginTranslations['en'];
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -73,51 +76,24 @@ export default function MpLogin({ language, highContrast }) {
     }
   }, [navigate]);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!email || !password) return;
-
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMessage('');
-
     try {
-      // Query the Supabase table mp_users
-      const { data, error } = await supabase
-        .from('mp_users')
-        .select('*')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
-
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/mp/login',
+        },
+      });
       if (error) {
-        console.error("Supabase login query error:", error);
-        setErrorMessage(t.invalidCreds);
+        console.error("Sign-in failed:", error.message);
+        setErrorMessage(error.message);
         setLoading(false);
-        return;
-      }
-
-      // Compare the entered password with the password stored in the table
-      if (data && data.password === password) {
-        // Save the MP session in localStorage
-        const sessionData = {
-          loggedIn: true,
-          name: data.name,
-          email: data.email,
-          constituency: data.constituency
-        };
-        localStorage.setItem('mp_session', JSON.stringify(sessionData));
-
-        // Dispatch a custom event to notify App.jsx of session changes
-        window.dispatchEvent(new Event('mp_session_change'));
-
-        // Redirect to /mp/dashboard
-        navigate('/mp/dashboard');
-      } else {
-        setErrorMessage(t.invalidCreds);
       }
     } catch (err) {
-      console.error("Login unexpected error:", err);
-      setErrorMessage(t.invalidCreds);
-    } finally {
+      console.error("Sign-in unexpected error:", err);
+      setErrorMessage("An unexpected error occurred during sign-in.");
       setLoading(false);
     }
   };
@@ -192,97 +168,55 @@ export default function MpLogin({ language, highContrast }) {
               </div>
             )}
 
-            {/* Login Form */}
-            <form onSubmit={handleLogin} className="space-y-5">
-              {/* Email field */}
-              <div className="space-y-1">
-                <label className={`text-xs font-bold ${
-                  highContrast ? 'text-yellow-300' : 'text-slate-600'
-                }`}>
-                  {t.emailLabel}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Mail className={`h-4.5 w-4.5 ${
-                      highContrast ? 'text-yellow-400/60' : 'text-slate-400'
-                    }`} />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t.emailPlaceholder}
-                    className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold focus:outline-none transition-colors border ${
-                      highContrast 
-                        ? 'bg-slate-950 border-yellow-500/50 text-yellow-300 focus:border-yellow-400' 
-                        : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-[#000080] hover:bg-slate-100/50'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* Password field */}
-              <div className="space-y-1">
-                <label className={`text-xs font-bold ${
-                  highContrast ? 'text-yellow-300' : 'text-slate-600'
-                }`}>
-                  {t.passwordLabel}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className={`h-4.5 w-4.5 ${
-                      highContrast ? 'text-yellow-400/60' : 'text-slate-400'
-                    }`} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t.passwordPlaceholder}
-                    className={`w-full rounded-xl pl-10 pr-10 py-2.5 text-sm font-semibold focus:outline-none transition-colors border ${
-                      highContrast 
-                        ? 'bg-slate-950 border-yellow-500/50 text-yellow-300 focus:border-yellow-400' 
-                        : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-[#000080] hover:bg-slate-100/50'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    {showPassword ? (
-                      <EyeOff className={`h-4.5 w-4.5 ${highContrast ? 'text-yellow-400/60' : 'text-slate-400'}`} />
-                    ) : (
-                      <Eye className={`h-4.5 w-4.5 ${highContrast ? 'text-yellow-400/60' : 'text-slate-400'}`} />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
+            {/* Google Sign-In Button */}
+            <div className="space-y-4">
               <button
-                type="submit"
+                type="button"
+                onClick={handleGoogleSignIn}
                 disabled={loading}
-                className={`w-full flex items-center justify-center font-bold py-3 rounded-xl border transition-all duration-200 shadow-md text-sm md:text-base cursor-pointer ${
+                className={`w-full flex items-center justify-center space-x-3 font-black py-3.5 px-4 rounded-xl border transition-all duration-300 shadow-md text-sm md:text-base cursor-pointer ${
                   highContrast
                     ? 'bg-yellow-400 text-black border-yellow-400 hover:bg-yellow-300 disabled:opacity-50'
-                    : 'bg-[#000080] text-white border-[#000080] hover:bg-[#000080]/90 hover:shadow-lg disabled:opacity-75'
+                    : 'bg-white text-slate-800 border-slate-250 hover:bg-slate-50 hover:shadow-lg focus:ring-4 focus:ring-slate-100 disabled:opacity-75'
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 border-2 rounded-full animate-spin ${
-                      highContrast ? 'border-black border-t-transparent' : 'border-white border-t-transparent'
+                    <div className={`w-4.5 h-4.5 border-2 rounded-full animate-spin ${
+                      highContrast ? 'border-black border-t-transparent' : 'border-slate-850 border-t-transparent'
                     }`}></div>
                     <span>{t.loggingIn}</span>
                   </div>
                 ) : (
-                  <span>{t.loginBtn}</span>
+                  <>
+                    <svg className="w-5.5 h-5.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    <span>{t.signInWithGoogle}</span>
+                  </>
                 )}
               </button>
-            </form>
+              <p className={`text-[11px] font-semibold text-center leading-relaxed ${
+                highContrast ? 'text-yellow-450/80' : 'text-slate-500'
+              }`}>
+                {t.onlyAuthorizedMps}
+              </p>
+            </div>
           </div>
 
           {/* Security Banner Notice */}
