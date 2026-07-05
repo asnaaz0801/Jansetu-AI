@@ -23,7 +23,7 @@ import {
   Camera
 } from 'lucide-react';
 import { translations } from '../lib/translations';
-import { db } from '../lib/db';
+import { supabase } from '../lib/db';
 import emblemOfIndia from '../assets/emblem-of-india.svg';
 import ashokaChakra from '../assets/ashoka-chakra.svg';
 
@@ -33,92 +33,92 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
 
   // Categories configurations with icons & localized labels
   const categoriesData = [
-    { id: 'roads', icon: '🛣', title: { en: 'Roads', hi: 'सड़कें', mr: 'रस्ते' } },
-    { id: 'water', icon: '💧', title: { en: 'Water Supply', hi: 'जलापूर्ति', mr: 'पाणी पुरवठा' } },
-    { id: 'electricity', icon: '⚡', title: { en: 'Electricity', hi: 'बिजली', mr: 'वीज' } },
-    { id: 'health', icon: '🏥', title: { en: 'Health', hi: 'स्वास्थ्य', mr: 'आरोग्य' } },
-    { id: 'education', icon: '🏫', title: { en: 'Education', hi: 'शिक्षा', mr: 'शिक्षण' } },
-    { id: 'employment', icon: '💼', title: { en: 'Employment', hi: 'रोजगार', mr: 'रोजगार' } },
-    { id: 'sanitation', icon: '🗑', title: { en: 'Sanitation', hi: 'स्वच्छता', mr: 'स्वच्छता' } },
-    { id: 'other', icon: '📌', title: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+    { id: 'roads', icon: '🛣', titleKey: 'catRoads' },
+    { id: 'water', icon: '💧', titleKey: 'catWater' },
+    { id: 'electricity', icon: '⚡', titleKey: 'catElectricity' },
+    { id: 'health', icon: '🏥', titleKey: 'catHealth' },
+    { id: 'education', icon: '🏫', titleKey: 'catEducation' },
+    { id: 'employment', icon: '💼', titleKey: 'catEmployment' },
+    { id: 'sanitation', icon: '🗑', titleKey: 'catSanitation' },
+    { id: 'other', icon: '📌', titleKey: 'catOther' }
   ];
 
   // Subcategories configurations
   const subcategoriesData = {
     roads: [
-      { id: 'potholes', label: { en: 'Potholes', hi: 'गड्ढे', mr: 'खड्डे' } },
-      { id: 'road_damage', label: { en: 'Road Damage', hi: 'सड़क क्षति', mr: 'रस्त्याचे नुकसान' } },
-      { id: 'construction', label: { en: 'Road Construction Required', hi: 'सड़क निर्माण की आवश्यकता', mr: 'नवीन रस्ता हवा आहे' } },
-      { id: 'traffic', label: { en: 'Traffic Congestion', hi: 'यातायात जाम', mr: 'वाहतूक कोंडी' } },
-      { id: 'missing_signs', label: { en: 'Missing Road Signs', hi: 'सड़क संकेत गायब होना', mr: 'वाहतूक चिन्हांचा अभाव' } },
-      { id: 'poor_drainage', label: { en: 'Poor Drainage on Roads', hi: 'सड़क पर खराब जल निकासी', mr: 'रस्त्यावर पाणी साचणे' } },
-      { id: 'encroachment', label: { en: 'Encroachment on Roads', hi: 'सड़क पर अतिक्रमण', mr: 'रस्त्यावरील अतिक्रमण' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'potholes', labelKey: 'subRoadsPotholes' },
+      { id: 'road_damage', labelKey: 'subRoadsDamage' },
+      { id: 'construction', labelKey: 'subRoadsConstruction' },
+      { id: 'traffic', labelKey: 'subRoadsTraffic' },
+      { id: 'missing_signs', labelKey: 'subRoadsSigns' },
+      { id: 'poor_drainage', labelKey: 'subRoadsDrainage' },
+      { id: 'encroachment', labelKey: 'subRoadsEncroachment' },
+      { id: 'other', labelKey: 'subRoadsOther' }
     ],
     water: [
-      { id: 'no_water', label: { en: 'No Water Supply', hi: 'पानी की आपूर्ति नहीं', mr: 'पाणी पुरवठा बंद' } },
-      { id: 'shortage', label: { en: 'Drinking Water Shortage', hi: 'पीने के पानी की कमी', mr: 'पिण्याच्या पाण्याची टंचाई' } },
-      { id: 'leakage', label: { en: 'Water Leakage', hi: 'पानी का रिसाव', mr: 'पाण्याचे गळती' } },
-      { id: 'low_pressure', label: { en: 'Low Water Pressure', hi: 'पानी का कम दबाव', mr: 'पाण्याचा कमी दाब' } },
-      { id: 'contaminated', label: { en: 'Contaminated Water', hi: 'दूषित पानी', mr: 'दूषित पाणी' } },
-      { id: 'broken_pipeline', label: { en: 'Broken Pipeline', hi: 'टूटी हुई पाइपलाइन', mr: 'फुटलेली पाईपलाईन' } },
-      { id: 'tank_maintenance', label: { en: 'Water Tank Maintenance', hi: 'पानी की टंकी का रखरखाव', mr: 'पाण्याच्या टाकीची देखभाल' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'no_water', labelKey: 'subWaterNoWater' },
+      { id: 'shortage', labelKey: 'subWaterShortage' },
+      { id: 'leakage', labelKey: 'subWaterLeakage' },
+      { id: 'low_pressure', labelKey: 'subWaterPressure' },
+      { id: 'contaminated', labelKey: 'subWaterContaminated' },
+      { id: 'broken_pipeline', labelKey: 'subWaterPipeline' },
+      { id: 'tank_maintenance', labelKey: 'subWaterMaintenance' },
+      { id: 'other', labelKey: 'subWaterOther' }
     ],
     electricity: [
-      { id: 'outage', label: { en: 'Power Outage', hi: 'बिजली कटौती', mr: 'वीज खंडित होणे' } },
-      { id: 'cuts', label: { en: 'Frequent Power Cuts', hi: 'बार-बार बिजली कटना', mr: 'वारंवार वीज जाणे' } },
-      { id: 'street_lights', label: { en: 'Street Light Not Working', hi: 'स्ट्रीट लाइट काम नहीं कर रही', mr: 'पथदिवे बंद असणे' } },
-      { id: 'transformer', label: { en: 'Transformer Damage', hi: 'ट्रांसफार्मर की क्षति', mr: 'ट्रान्सफॉर्मर बिघाड' } },
-      { id: 'voltage', label: { en: 'Voltage Fluctuation', hi: 'वोल्टेज में उतार-चढ़ाव', mr: 'व्होल्टेज चढउतार' } },
-      { id: 'wires', label: { en: 'Exposed Electrical Wires', hi: 'खुले बिजली के तार', mr: 'उघड्या विद्युत तारा' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'outage', labelKey: 'subElecOutage' },
+      { id: 'cuts', labelKey: 'subElecCuts' },
+      { id: 'street_lights', labelKey: 'subElecStreetlights' },
+      { id: 'transformer', labelKey: 'subElecTransformer' },
+      { id: 'voltage', labelKey: 'subElecVoltage' },
+      { id: 'wires', labelKey: 'subElecWires' },
+      { id: 'other', labelKey: 'subElecOther' }
     ],
     health: [
-      { id: 'infrastructure', label: { en: 'Hospital Infrastructure', hi: 'अस्पताल का बुनियादी ढांचा', mr: 'रुग्णालय पायाभूत सुविधा' } },
-      { id: 'doctor_shortage', label: { en: 'Doctor Shortage', hi: 'डॉक्टरों की कमी', mr: 'डॉक्टरांची कमतरता' } },
-      { id: 'medicine_shortage', label: { en: 'Medicine Shortage', hi: 'दवाओं की कमी', mr: 'औषधांची टंचाई' } },
-      { id: 'ambulance', label: { en: 'Ambulance Availability', hi: 'एम्बुलेंस की उपलब्धता', mr: 'रुग्णवाहिका उपलब्धता' } },
-      { id: 'health_camp', label: { en: 'Health Camp Request', hi: 'स्वास्थ्य शिविर का अनुरोध', mr: 'आरोग्य शिबिर विनंती' } },
-      { id: 'cleanliness', label: { en: 'Cleanliness Issues', hi: 'स्वच्छता के मुद्दे', mr: 'रुग्णालयातील अस्वच्छता' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'infrastructure', labelKey: 'subHealthInfra' },
+      { id: 'doctor_shortage', labelKey: 'subHealthDoctors' },
+      { id: 'medicine_shortage', labelKey: 'subHealthMedicines' },
+      { id: 'ambulance', labelKey: 'subHealthAmbulance' },
+      { id: 'health_camp', labelKey: 'subHealthCamp' },
+      { id: 'cleanliness', labelKey: 'subHealthCleanliness' },
+      { id: 'other', labelKey: 'subHealthOther' }
     ],
     education: [
-      { id: 'school_repair', label: { en: 'School Building Repair', hi: 'स्कूल भवन की मरम्मत', mr: 'शाळेच्या इमारतीची दुरुस्ती' } },
-      { id: 'teacher_shortage', label: { en: 'Teacher Shortage', hi: 'शिक्षकों की कमी', mr: 'शिक्षकांची कमतरता' } },
-      { id: 'classroom_shortage', label: { en: 'Classroom Shortage', hi: 'क्लासरूम की कमी', mr: 'वर्गखोल्यांची कमतरता' } },
-      { id: 'toilets', label: { en: 'Toilet Facilities', hi: 'शौचालय की सुविधा', mr: 'स्वच्छतागृह सुविधा' } },
-      { id: 'digital_learning', label: { en: 'Digital Learning Facilities', hi: 'डिजिटल लर्निंग सुविधाएं', mr: 'डिजिटल शिक्षण सुविधा' } },
-      { id: 'new_school', label: { en: 'New School Request', hi: 'नए स्कूल का अनुरोध', mr: 'नवीन शाळेची विनंती' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'school_repair', labelKey: 'subEduRepair' },
+      { id: 'teacher_shortage', labelKey: 'subEduTeachers' },
+      { id: 'classroom_shortage', labelKey: 'subEduClassrooms' },
+      { id: 'toilets', labelKey: 'subEduToilets' },
+      { id: 'digital_learning', labelKey: 'subEduDigital' },
+      { id: 'new_school', labelKey: 'subEduNewSchool' },
+      { id: 'other', labelKey: 'subEduOther' }
     ],
     employment: [
-      { id: 'skill_center', label: { en: 'Skill Development Center', hi: 'कौशल विकास केंद्र', mr: 'कौशल्य विकास केंद्र' } },
-      { id: 'job_fair', label: { en: 'Job Fair Request', hi: 'रोजगार मेले का अनुरोध', mr: 'रोजगार मेळावा विनंती' } },
-      { id: 'opportunities', label: { en: 'Employment Opportunities', hi: 'रोजगार के अवसर', mr: 'रोजगाराच्या संधी' } },
-      { id: 'vocational', label: { en: 'Vocational Training', hi: 'व्यावसायिक प्रशिक्षण', mr: 'व्यावसायिक प्रशिक्षण' } },
-      { id: 'self_employment', label: { en: 'Self-Employment Support', hi: 'स्वरोजगार सहायता', mr: 'स्वयंरोजगार सहाय्य' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'skill_center', labelKey: 'subEmpCenter' },
+      { id: 'job_fair', labelKey: 'subEmpFair' },
+      { id: 'opportunities', labelKey: 'subEmpOpportunities' },
+      { id: 'vocational', labelKey: 'subEmpVocational' },
+      { id: 'self_employment', labelKey: 'subEmpSelf' },
+      { id: 'other', labelKey: 'subEmpOther' }
     ],
     sanitation: [
-      { id: 'garbage_collection', label: { en: 'Garbage Collection', hi: 'कचरा संग्रहण', mr: 'कचरा गोळा करणे' } },
-      { id: 'overflow_dustbins', label: { en: 'Overflowing Dustbins', hi: 'ओवरफ्लो कचरा डिब्बे', mr: 'कचराकुंडी ओसंडून वाहणे' } },
-      { id: 'toilet_issues', label: { en: 'Public Toilet Issues', hi: 'सार्वजनिक शौचालय के मुद्दे', mr: 'सार्वजनिक शौचालयाची दुरावस्था' } },
-      { id: 'drainage_problems', label: { en: 'Drainage Problems', hi: 'जल निकासी की समस्याएं', mr: 'सांडपाणी समस्या' } },
-      { id: 'sewage_leakage', label: { en: 'Sewage Leakage', hi: 'सीवेज रिसाव', mr: 'मैला वाहक गळती' } },
-      { id: 'other', label: { en: 'Other', hi: 'अन्य', mr: 'इतर' } }
+      { id: 'garbage_collection', labelKey: 'subSanGarbage' },
+      { id: 'overflow_dustbins', labelKey: 'subSanDustbins' },
+      { id: 'toilet_issues', labelKey: 'subSanToilets' },
+      { id: 'drainage_problems', labelKey: 'subSanDrainage' },
+      { id: 'sewage_leakage', labelKey: 'subSanSewage' },
+      { id: 'other', labelKey: 'subSanOther' }
     ],
     other: [
-      { id: 'custom_input', label: { en: 'Custom Input Field', hi: 'कस्टम इनपुट फ़ील्ड', mr: 'कस्टम इनपुट फील्ड' } }
+      { id: 'custom_input', labelKey: 'subOtherCustom' }
     ]
   };
 
   // Severities config
   const severitiesList = [
-    { id: 'Low', color: 'bg-emerald-500', text: 'severityLow', label: { en: 'Low', hi: 'कम', mr: 'कमी' } },
-    { id: 'Medium', color: 'bg-yellow-500', text: 'severityMedium', label: { en: 'Medium', hi: 'मध्यम', mr: 'मध्यम' } },
-    { id: 'High', color: 'bg-orange-500', text: 'severityHigh', label: { en: 'High', hi: 'उच्च', mr: 'उच्च' } },
-    { id: 'Critical', color: 'bg-red-500', text: 'severityCritical', label: { en: 'Critical', hi: 'गंभीर', mr: 'गंभीर' } }
+    { id: 'Low', color: 'bg-emerald-500', text: 'severityLow' },
+    { id: 'Medium', color: 'bg-yellow-500', text: 'severityMedium' },
+    { id: 'High', color: 'bg-orange-500', text: 'severityHigh' },
+    { id: 'Critical', color: 'bg-red-500', text: 'severityCritical' }
   ];
 
   // Estimated Impact config
@@ -136,6 +136,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
   const [severity, setSeverity] = useState('Medium');
   const [impact, setImpact] = useState('50-200');
   const [description, setDescription] = useState('');
+  const [citizenName, setCitizenName] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('text'); // 'voice' | 'text' | 'photo' | 'location'
   
   // Simulation States
@@ -151,11 +152,32 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
   const [locationCoords, setLocationCoords] = useState(null);
   const [locationSuccess, setLocationSuccess] = useState(false);
 
+  // Location fields states
+  const [locState, setLocState] = useState('');
+  const [locDistrict, setLocDistrict] = useState('');
+  const [locCity, setLocCity] = useState('');
+  const [locArea, setLocArea] = useState('');
+  const [locPincode, setLocPincode] = useState('');
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
   // Submit and modal states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Helper variables
   const fileInputRef = useRef(null);
@@ -193,34 +215,110 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     return 'Describe your issue in detail...';
   };
 
-  // VOICE INPUT SIMULATOR
-  const startRecording = () => {
-    setIsRecording(true);
-    setVoiceTranscript('');
-    setVoiceCompleted(false);
+  // VOICE INPUT NATIVE SPEECH RECOGNITION
+  const recognitionRef = useRef(null);
+  const descriptionStartRef = useRef('');
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      
+      let langCode = 'en-IN';
+      if (language === 'hi') langCode = 'hi-IN';
+      else if (language === 'mr') langCode = 'mr-IN';
+      rec.lang = langCode;
+
+      rec.onstart = () => {
+        setIsRecording(true);
+        setVoiceCompleted(false);
+      };
+
+      rec.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          alert(language === 'hi' 
+            ? 'माइक्रोफ़ोन अनुमति अस्वीकृत। कृपया अपने ब्राउज़र सेटिंग में अनुमति सक्षम करें।' 
+            : language === 'mr'
+            ? 'मायक्रोफोन परवानगी नाकारली. कृपया आपल्या ब्राउझर सेटिंग्जमध्ये परवानगी द्या.'
+            : 'Microphone permission denied. Please enable permission in your browser settings.');
+        }
+        // Silently stop recording on common harmless errors like 'no-speech' or 'aborted' without popping up annoying alerts
+      };
+
+      rec.onend = () => {
+        setIsRecording(false);
+        setVoiceCompleted(true);
+      };
+
+      rec.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        const recognizedText = finalTranscript + interimTranscript;
+        if (recognizedText.trim()) {
+          setVoiceTranscript(recognizedText);
+          const baseText = descriptionStartRef.current;
+          const fullText = baseText ? `${baseText.trim()} ${recognizedText.trim()}` : recognizedText.trim();
+          if (fullText.length <= maxCharCount) {
+            setDescription(fullText);
+          } else {
+            setDescription(fullText.substring(0, maxCharCount));
+          }
+        }
+      };
+
+      recognitionRef.current = rec;
+    }
     
-    // Mock speech-to-text conversion after 4 seconds
-    setTimeout(() => {
-      setIsRecording(false);
-      setVoiceCompleted(true);
-      
-      let mockText = "";
-      if (language === 'en') {
-        mockText = "The drainage pipeline is blocked and overflowing onto the street, creating unhealthy conditions for neighbors.";
-      } else if (language === 'hi') {
-        mockText = "ड्रेनेज पाइपलाइन अवरुद्ध है और सड़क पर बह रही है, जिससे पड़ोसियों के लिए अस्वास्थ्यकर स्थिति पैदा हो रही है।";
-      } else {
-        mockText = "सांडपाण्याची वाहिनी तुंबली आहे आणि रस्त्यावर वाहत आहे, ज्यामुळे शेजाऱ्यांसाठी अस्वच्छता निर्माण झाली आहे.";
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
-      
-      setVoiceTranscript(mockText);
-      
-      // Auto append or set description
-      setDescription(prev => prev ? `${prev} [Transcript: ${mockText}]` : mockText);
-    }, 4000);
+    };
+  }, [language]);
+
+  const startRecording = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert(language === 'hi' 
+        ? 'आपका ब्राउज़र स्पीच रिकग्निशन का समर्थन नहीं करता है। कृपया क्रोम या एज का उपयोग करें।' 
+        : language === 'mr'
+        ? 'तुमचा ब्राउझर स्पीच रिकग्निशनला समर्थन देत नाही. कृपया क्रोम किंवा एज वापरा.'
+        : 'Your browser does not support Speech Recognition. Please use Chrome or Edge.');
+      return;
+    }
+
+    if (recognitionRef.current) {
+      descriptionStartRef.current = description;
+      setVoiceTranscript('');
+      setVoiceCompleted(false);
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+      }
+    }
   };
 
   const stopRecording = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.error('Failed to stop recognition:', err);
+      }
+    }
     setIsRecording(false);
   };
 
@@ -256,7 +354,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
   const processFile = (file) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
-      alert(language === 'en' ? 'Only JPG, JPEG, and PNG images are allowed.' : 'केवल JPG, JPEG और PNG छवियों की अनुमति है।');
+      alert(t.onlyImagesAllowed);
       return;
     }
     setPhotoFile(file);
@@ -269,60 +367,342 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     setPhotoPreviewUrl(null);
   };
 
-  // GPS LOCATION DETECTION (Attempt real geolocation first, fallback to mock if denied)
+  // REVERSE GEOCODING API INTEGRATION
+  const reverseGeocode = async (lat, lng) => {
+    setIsGeocoding(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+        headers: {
+          'User-Agent': 'Jansetu-AI-Constituency-Planner-App'
+        }
+      });
+      if (!response.ok) throw new Error('Geocoding network response failed');
+      const data = await response.json();
+      
+      if (data && data.address) {
+        const address = data.address;
+        const displayName = data.display_name || '';
+
+        const utMap = {
+          'IN-DL': 'Delhi',
+          'IN-CH': 'Chandigarh',
+          'IN-JK': 'Jammu and Kashmir',
+          'IN-PY': 'Puducherry',
+          'IN-AN': 'Andaman and Nicobar Islands',
+          'IN-DN': 'Dadra and Nagar Haveli and Daman and Diu',
+          'IN-LA': 'Ladakh',
+          'IN-LD': 'Lakshadweep'
+        };
+
+        // 1. State
+        let state = address.state || '';
+        if (!state && address['ISO3166-2-lvl4']) {
+          const isoCode = address['ISO3166-2-lvl4'];
+          if (utMap[isoCode]) {
+            state = utMap[isoCode];
+          }
+        }
+        if (!state && displayName) {
+          const parts = displayName.split(',').map(p => p.trim());
+          const knownStates = ["Delhi", "Chandigarh", "Jammu and Kashmir", "Puducherry", "Andaman and Nicobar Islands", "Dadra and Nagar Haveli and Daman and Diu", "Ladakh", "Lakshadweep", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+          for (const part of parts) {
+            if (knownStates.includes(part)) {
+              state = part;
+              break;
+            }
+          }
+        }
+
+        // 2. District
+        let district = address.state_district || address.county || address.district || '';
+        if (!district && displayName) {
+          if (address.city === "New Delhi" || address.city === "Delhi") {
+            district = address.city;
+          }
+        }
+
+        // 3. City
+        const city = address.city || address.town || address.village || address.municipality || address.city_district || '';
+
+        // 4. Area / Village / Locality
+        const area = address.suburb || address.neighbourhood || address.quarter || address.residential || address.road || address.hamlet || '';
+
+        // 5. Pincode
+        const pincode = address.postcode || '';
+
+        setLocState(state);
+        setLocDistrict(district);
+        setLocCity(city);
+        
+        // Clear address validation errors when populated
+        setValidationErrors(prev => ({
+          ...prev,
+          locState: null,
+          locDistrict: null,
+          locCity: null
+        }));
+      }
+    } catch (error) {
+      console.error("Reverse geocoding error:", error);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  // GPS LOCATION DETECTION (Capture exact location using device GPS)
   const detectLocation = () => {
     setIsDetectingLocation(true);
     setLocationSuccess(false);
     
     if (navigator.geolocation) {
+      // Configure geolocation options to request fresh, high-accuracy GPS data
+      const geoOptions = {
+        enableHighAccuracy: true,
+        timeout: 15000, // 15 seconds timeout to allow GPS hardware to lock
+        maximumAge: 0   // Force fetching fresh location (no cache)
+      };
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setIsDetectingLocation(false);
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          
           setLocationCoords({ lat, lng });
           setLocationSuccess(true);
           if (validationErrors.location) {
             setValidationErrors(prev => ({ ...prev, location: null }));
           }
+          reverseGeocode(lat, lng);
         },
         (error) => {
-          console.warn("Geolocation failed or denied, using constituency fallback coordinates:", error);
-          // Fallback to mock coordinates centered on Delhi
-          setTimeout(() => {
+          console.warn("GPS high-accuracy geolocation failed:", error);
+          
+          // Inform user of specific error types
+          if (error.code === error.PERMISSION_DENIED) {
             setIsDetectingLocation(false);
-            const lat = 28.6139 + (Math.random() - 0.5) * 0.01;
-            const lng = 77.2090 + (Math.random() - 0.5) * 0.01;
-            
-            setLocationCoords({ lat, lng });
-            setLocationSuccess(true);
-            if (validationErrors.location) {
-              setValidationErrors(prev => ({ ...prev, location: null }));
-            }
-          }, 1000);
+            alert(language === 'hi' 
+              ? 'स्थान अनुमति अस्वीकृत। कृपया सटीक स्थान प्राप्त करने के लिए अपने ब्राउज़र सेटिंग में स्थान अनुमति सक्षम करें।' 
+              : language === 'mr'
+              ? 'स्थान परवानगी नाकारली. कृपया अचूक स्थान मिळवण्यासाठी आपल्या ब्राउझर सेटिंग्जमध्ये स्थान परवानगी द्या.'
+              : 'Location permission denied. Please enable location permissions in browser settings to capture precise GPS coordinates.');
+            return;
+          }
+
+          // Fallback to network/IP-based location if GPS is unavailable or times out
+          console.log("Attempting network location fallback...");
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setIsDetectingLocation(false);
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              setLocationCoords({ lat, lng });
+              setLocationSuccess(true);
+              if (validationErrors.location) {
+                setValidationErrors(prev => ({ ...prev, location: null }));
+              }
+              reverseGeocode(lat, lng);
+            },
+            (err) => {
+              console.warn("Network location fallback failed, using Delhi center coordinates:", err);
+              setIsDetectingLocation(false);
+              // Fallback to center coordinates (Delhi) with slight random variation
+              const lat = 28.6139 + (Math.random() - 0.5) * 0.01;
+              const lng = 77.2090 + (Math.random() - 0.5) * 0.01;
+              setLocationCoords({ lat, lng });
+              setLocationSuccess(true);
+              if (validationErrors.location) {
+                setValidationErrors(prev => ({ ...prev, location: null }));
+              }
+              reverseGeocode(lat, lng);
+            },
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+          );
         },
-        { enableHighAccuracy: true, timeout: 6000 }
+        geoOptions
       );
     } else {
-      // Browser doesn't support Geolocation, use fallback
-      setTimeout(() => {
-        setIsDetectingLocation(false);
-        const lat = 28.6139 + (Math.random() - 0.5) * 0.01;
-        const lng = 77.2090 + (Math.random() - 0.5) * 0.01;
-        
-        setLocationCoords({ lat, lng });
-        setLocationSuccess(true);
-        if (validationErrors.location) {
-          setValidationErrors(prev => ({ ...prev, location: null }));
-        }
-      }, 1000);
+      setIsDetectingLocation(false);
+      alert(language === 'hi' 
+        ? 'आपका ब्राउज़र जीपीएस स्थान का समर्थन नहीं करता है।' 
+        : language === 'mr'
+        ? 'तुमचा ब्राउझर जीपीएस स्थानाला समर्थन देत नाही.'
+        : 'Your browser does not support GPS location detection.');
     }
+  };
+
+  // Helper component to render administrative location input fields
+  const renderAddressFields = () => {
+    if (!locationSuccess) return null;
+    
+    return (
+      <div className="mt-4 border-t border-slate-100/10 pt-4 animate-fadeIn space-y-4 text-left">
+        {isGeocoding && (
+          <div className="flex items-center space-x-2 text-xs font-semibold text-blue-600">
+            <span className="h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span>Fetching address details / पता विवरण लोड हो रहा है...</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* State */}
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 text-slate-500">
+              State / राज्य <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={locState}
+              onChange={(e) => {
+                setLocState(e.target.value);
+                if (validationErrors.locState) {
+                  setValidationErrors(prev => ({ ...prev, locState: null }));
+                }
+              }}
+              placeholder="e.g. Delhi"
+              className={`w-full p-3 rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                validationErrors.locState
+                  ? 'border-red-500 focus:ring-red-500/20'
+                  : highContrast
+                    ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                    : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            />
+            {validationErrors.locState && (
+              <p className="mt-1 text-[10px] text-red-500 font-bold">{validationErrors.locState}</p>
+            )}
+          </div>
+
+          {/* District */}
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 text-slate-500">
+              District / जिला <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={locDistrict}
+              onChange={(e) => {
+                setLocDistrict(e.target.value);
+                if (validationErrors.locDistrict) {
+                  setValidationErrors(prev => ({ ...prev, locDistrict: null }));
+                }
+              }}
+              placeholder="e.g. Central Delhi"
+              className={`w-full p-3 rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                validationErrors.locDistrict
+                  ? 'border-red-500 focus:ring-red-500/20'
+                  : highContrast
+                    ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                    : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            />
+            {validationErrors.locDistrict && (
+              <p className="mt-1 text-[10px] text-red-500 font-bold">{validationErrors.locDistrict}</p>
+            )}
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 text-slate-500">
+              City / शहर <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={locCity}
+              onChange={(e) => {
+                setLocCity(e.target.value);
+                if (validationErrors.locCity) {
+                  setValidationErrors(prev => ({ ...prev, locCity: null }));
+                }
+              }}
+              placeholder="e.g. New Delhi"
+              className={`w-full p-3 rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                validationErrors.locCity
+                  ? 'border-red-500 focus:ring-red-500/20'
+                  : highContrast
+                    ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                    : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            />
+            {validationErrors.locCity && (
+              <p className="mt-1 text-[10px] text-red-500 font-bold">{validationErrors.locCity}</p>
+            )}
+          </div>
+
+          {/* Area / Village */}
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 text-slate-500">
+              Area / Village / क्षेत्र / गाँव <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={locArea}
+              onChange={(e) => {
+                setLocArea(e.target.value);
+                if (validationErrors.locArea) {
+                  setValidationErrors(prev => ({ ...prev, locArea: null }));
+                }
+              }}
+              placeholder="e.g. Raisina Hill"
+              className={`w-full p-3 rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                validationErrors.locArea
+                  ? 'border-red-500 focus:ring-red-500/20'
+                  : highContrast
+                    ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                    : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            />
+            {validationErrors.locArea && (
+              <p className="mt-1 text-[10px] text-red-500 font-bold">{validationErrors.locArea}</p>
+            )}
+          </div>
+
+          {/* Pincode */}
+          <div className="sm:col-span-2">
+            <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 text-slate-500">
+              Pincode / पिनकोड <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={locPincode}
+              onChange={(e) => {
+                setLocPincode(e.target.value);
+                if (validationErrors.locPincode) {
+                  setValidationErrors(prev => ({ ...prev, locPincode: null }));
+                }
+              }}
+              placeholder="e.g. 110004"
+              className={`w-full p-3 rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                validationErrors.locPincode
+                  ? 'border-red-500 focus:ring-red-500/20'
+                  : highContrast
+                    ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                    : 'bg-white border-slate-200 text-slate-800'
+              }`}
+            />
+            {validationErrors.locPincode && (
+              <p className="mt-1 text-[10px] text-red-500 font-bold">{validationErrors.locPincode}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // FORM VALIDATION & SUBMISSION
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user) {
+      setValidationErrors({
+        submit: language === 'hi' 
+          ? 'कृपया शिकायत दर्ज करने से पहले गूगल के साथ साइन इन करें।' 
+          : language === 'mr'
+          ? 'कृपया तक्रार नोंदवण्यापूर्वी गूगलने साइन इन करा.'
+          : 'Please Sign In with Google before submitting a complaint.'
+      });
+      return;
+    }
+
     const errors = {};
 
     if (!selectedCategory) {
@@ -336,9 +716,28 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     }
     if (!description.trim()) {
       errors.description = t.enterDescriptionAlert;
+    } else if (description.trim().length < 30) {
+      errors.description = t.descMinLengthError;
     }
     if (!locationCoords) {
       errors.location = t.detectLocationAlert;
+    } else {
+      // Validate administrative location fields
+      if (!locState.trim()) {
+        errors.locState = t.locStateRequired;
+      }
+      if (!locDistrict.trim()) {
+        errors.locDistrict = t.locDistrictRequired;
+      }
+      if (!locCity.trim()) {
+        errors.locCity = t.locCityRequired;
+      }
+      if (!locArea.trim()) {
+        errors.locArea = t.locAreaRequired;
+      }
+      if (!locPincode.trim()) {
+        errors.locPincode = t.locPincodeRequired;
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -346,7 +745,11 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
       
       // Scroll to the first error
       const firstErrorKey = Object.keys(errors)[0];
-      const el = document.getElementById(`error-anchor-${firstErrorKey}`);
+      let anchorId = `error-anchor-${firstErrorKey}`;
+      if (['locState', 'locDistrict', 'locCity', 'locArea', 'locPincode'].includes(firstErrorKey)) {
+        anchorId = 'error-anchor-location';
+      }
+      const el = document.getElementById(anchorId);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -356,13 +759,88 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     setIsSubmitting(true);
 
     try {
-      // Generate standard GOI request Complaint ID (JSA-2026-XXXX)
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const generatedId = `JSA-2026-${randomNum}`;
+      // Map category ID to the exact English enums expected by the database
+      const categoryMapping = {
+        roads: 'Roads',
+        water: 'Water Supply',
+        electricity: 'Electricity',
+        health: 'Healthcare',
+        education: 'Education',
+        employment: 'Other',
+        sanitation: 'Garbage',
+        other: 'Other'
+      };
+      const dbCategory = categoryMapping[selectedCategory] || 'Other';
+
+      // Count complaints for this user in this category with status = 'open'
+      const { count, error: limitError } = await supabase
+        .from('issues')
+        .select('issue_id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('category', dbCategory)
+        .eq('status', 'open');
+
+      if (limitError) {
+        console.error('Error checking category limit:', limitError);
+      } else if (count !== null && count >= 3) {
+        setValidationErrors(prev => ({
+          ...prev,
+          submit: language === 'hi' 
+            ? 'आपने इस श्रेणी के लिए 3 खुली शिकायतों की सीमा पूरी कर ली है। कृपया दूसरी शिकायत दर्ज करने से पहले सांसद द्वारा उनके समाधान की प्रतीक्षा करें।'
+            : language === 'mr'
+            ? 'आपण या श्रेणीसाठी 3 खुल्या तक्रारींची मर्यादा पूर्ण केली आहे. कृपया दुसरी तक्रार नोंदवण्यापूर्वी खासदाराने त्याचे निराकरण करण्याची प्रतीक्षा करा.'
+            : 'You have reached the limit of 3 open complaints for this category. Please wait for the MP to resolve them before submitting another.'
+        }));
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Generate unique sequential reference code — query DB for max existing suffix and increment
+      const generateUniqueReferenceCode = async () => {
+        const YEAR = new Date().getFullYear();
+        const PREFIX = `JSA-${YEAR}-`;
+
+        // 1. Fetch the max existing numeric suffix for this year's codes
+        const { data: existingRows } = await supabase
+          .from('issues')
+          .select('reference_code')
+          .like('reference_code', `${PREFIX}%`)
+          .order('reference_code', { ascending: false })
+          .limit(20);
+
+        let nextNum = 1;
+        if (existingRows && existingRows.length > 0) {
+          // Extract numeric suffixes and find the max
+          const nums = existingRows
+            .map(r => parseInt((r.reference_code || '').replace(PREFIX, ''), 10))
+            .filter(n => !isNaN(n));
+          if (nums.length > 0) {
+            nextNum = Math.max(...nums) + 1;
+          }
+        }
+
+        // 2. Verify the candidate ID doesn't exist (handles race conditions)
+        for (let attempt = 0; attempt < 10; attempt++) {
+          const candidate = `${PREFIX}${String(nextNum).padStart(4, '0')}`;
+          const { data: existing } = await supabase
+            .from('issues')
+            .select('reference_code')
+            .eq('reference_code', candidate)
+            .maybeSingle();
+
+          if (!existing) return candidate; // ID is available
+          nextNum++; // Try next number on collision
+        }
+
+        // Fallback: use timestamp-based unique code
+        return `${PREFIX}${Date.now().toString().slice(-6)}`;
+      };
+
+      const generatedId = await generateUniqueReferenceCode();
 
       // Get category label translation
       const categoryLabelObj = categoriesData.find(c => c.id === selectedCategory);
-      const categoryLabel = categoryLabelObj ? categoryLabelObj.title[language] : selectedCategory;
+      const categoryLabel = categoryLabelObj ? t[categoryLabelObj.titleKey] : selectedCategory;
       
       // Get subcategory label translation
       let subcategoryLabel = '';
@@ -371,32 +849,106 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
       } else {
         const subList = subcategoriesData[selectedCategory] || [];
         const subObj = subList.find(s => s.id === selectedSubcategory);
-        subcategoryLabel = subObj ? subObj.label[language] : selectedSubcategory;
+        subcategoryLabel = subObj ? t[subObj.labelKey] : selectedSubcategory;
       }
 
       // Format location label
       const locationLabel = `${categoryLabel} Location (Ward ${Math.floor(Math.random() * 12) + 1})`;
 
-      // Create payload to save into localStorage database
-      const payload = {
-        id: generatedId,
-        title: `${categoryLabel}: ${subcategoryLabel}`,
-        description: description,
-        category: categoryLabel,
-        location: locationLabel,
-        submittedBy: language === 'en' ? 'Citizen' : language === 'hi' ? 'नागरिक' : 'नागरिक',
-        lat: locationCoords.lat,
-        lng: locationCoords.lng,
+      let dbTitle = `${categoryLabel}: ${subcategoryLabel}`;
+      if (dbTitle.length < 10) {
+        dbTitle = `${dbTitle} Issue`;
+      }
+      if (dbTitle.length < 10) {
+        dbTitle = `Constituency Issue: ${dbTitle}`;
+      }
+
+      const getBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
       };
 
-      // Submit to DB (local storage)
-      await db.submitPriority(payload);
+      let dbImageUrl = null;
+      if (photoFile) {
+        try {
+          dbImageUrl = await getBase64(photoFile);
+        } catch (err) {
+          console.error('Error converting photo to base64:', err);
+        }
+      }
 
-      setSubmittedId(generatedId);
+      // Generate unique IDs client-side as fallback / default
+      const generatedUuid = typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID 
+        ? window.crypto.randomUUID() 
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+
+      // Ensure coordinates are always set — fallback to Delhi center area if user hasn't detected location
+      const finalCoords = locationCoords ?? {
+        lat: 28.6139 + (Math.random() - 0.5) * 0.08,
+        lng: 77.2090 + (Math.random() - 0.5) * 0.08
+      };
+
+      // Create payload matching the Supabase 'issues' table schema
+      const payload = {
+        issue_id: generatedUuid,
+        reference_code: generatedId,
+        user_id: user.id,
+        citizen_id: user.id,
+        email_id: user.email || null,
+        title: dbTitle,
+        description: description,
+        category: dbCategory,
+        constituency: 'Central Delhi',
+        state: locState.trim() || 'Delhi',
+        district: locDistrict.trim() || null,
+        city: locCity.trim() || null,
+        area: locArea.trim() || null,
+        pincode: locPincode.trim() || null,
+        latitude: finalCoords.lat,
+        longitude: finalCoords.lng,
+        geolocation: `POINT(${finalCoords.lng} ${finalCoords.lat})`,
+        status: 'open',
+        citizen_name: user.user_metadata?.full_name || citizenName.trim() || null,
+        image_url: dbImageUrl,
+        created_at: new Date().toISOString()
+      };
+
+      // Submit to Supabase and await response to get the official database-generated ID
+      const { data, error } = await supabase
+        .from('issues')
+        .insert(payload)
+        .select('reference_code')
+        .single();
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        setValidationErrors(prev => ({
+          ...prev,
+          submit: t.dbSaveError
+        }));
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Show success modal only on successful DB insertion
+      setSubmittedId(data.reference_code);
+      setValidationErrors({});
       setIsSubmitting(false);
       setShowSuccessModal(true);
+
     } catch (err) {
-      console.error("Submission failed:", err);
+      console.error('Submission failed:', err);
+      setValidationErrors(prev => ({
+        ...prev,
+        submit: t.unexpectedError
+      }));
       setIsSubmitting(false);
     }
   };
@@ -414,28 +966,33 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     setPhotoPreviewUrl(null);
     setLocationCoords(null);
     setLocationSuccess(false);
+    setLocState('');
+    setLocDistrict('');
+    setLocCity('');
+    setLocArea('');
+    setLocPincode('');
     setValidationErrors({});
     setShowSuccessModal(false);
     setSelectedMethod('text');
+    setCitizenName('');
   };
 
   const handleDownloadReceipt = () => {
-    const dateStr = new Date().toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const dateStr = new Date().toLocaleDateString(
+      `${language}-IN`,
+      { year: 'numeric', month: 'long', day: 'numeric' }
+    );
     
     const categoryTitle = selectedCategory === 'other' 
-      ? (customCategoryText || 'Other')
-      : (categoriesData.find(c => c.id === selectedCategory)?.title[language] || selectedCategory);
+      ? (customCategoryText || t.catOther)
+      : (t[categoriesData.find(c => c.id === selectedCategory)?.titleKey] || selectedCategory);
 
     const subcategoryLabel = selectedCategory === 'other'
-      ? 'Custom Category'
-      : ((subcategoriesData[selectedCategory] || []).find(s => s.id === selectedSubcategory)?.label[language] || selectedSubcategory);
+      ? t.otherCategoryCustom
+      : (t[((subcategoriesData[selectedCategory] || []).find(s => s.id === selectedSubcategory)?.labelKey)] || selectedSubcategory);
 
     const printWindow = window.open('', '', 'height=700,width=850');
-    printWindow.document.write('<html><head><title>Receipt - JanSetu AI</title>');
+    printWindow.document.write('<html><head><title>' + t.receiptReceiptTitle + '</title>');
     printWindow.document.write('<script src="https://cdn.tailwindcss.com"></script>');
     printWindow.document.write('<style>body { font-family: sans-serif; }</style>');
     printWindow.document.write('</head><body class="p-8 bg-white text-slate-800">');
@@ -458,20 +1015,20 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             <img src="${emblemOfIndia}" alt="National Emblem of India" class="h-20 w-auto select-none pointer-events-none object-contain" />
           </div>
           <h1 class="text-xs font-black tracking-widest text-[#000080] uppercase">
-            Government of India
+            ${t.goiText}
           </h1>
           <h2 class="text-sm font-extrabold text-[#000080] tracking-tight mt-1">
             JanSetu AI
           </h2>
           <p class="text-[10px] tracking-wide text-slate-500 font-bold uppercase mt-1">
-            AI-Powered Constituency Development Platform
+            ${t.devPlatformSub}
           </p>
         </div>
 
         <div class="py-6 space-y-4 text-xs relative z-10">
           <div class="flex justify-between items-center bg-slate-100 p-2.5 rounded border border-slate-300">
             <span class="font-extrabold uppercase text-[10px] tracking-wide text-slate-600">
-              Complaint ID:
+              ${t.complaintIdLabel}:
             </span>
             <span class="font-black text-sm tracking-tight text-slate-900">
               ${submittedId}
@@ -481,7 +1038,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <span class="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
-                Submission Date
+                ${t.submissionDateLabel}
               </span>
               <span class="font-black text-slate-800">
                 ${dateStr}
@@ -489,7 +1046,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             </div>
             <div>
               <span class="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
-                Category
+                ${t.categoryLabel}
               </span>
               <span class="font-black text-slate-800">${categoryTitle} (${subcategoryLabel})</span>
             </div>
@@ -498,7 +1055,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
           <div class="grid grid-cols-2 gap-4 border-t pt-3">
             <div>
               <span class="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
-                Location / Coordinates
+                ${t.locationLabel} / Coordinates
               </span>
               <span class="font-black text-slate-800">
                 ${locationCoords ? `Lat: ${locationCoords.lat.toFixed(4)}, Lng: ${locationCoords.lng.toFixed(4)}` : 'Detected Location'}
@@ -506,7 +1063,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             </div>
             <div>
               <span class="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
-                Current Status
+                ${t.currentStatusLabel}
               </span>
               <span class="font-black text-[#138808] uppercase text-[11px] tracking-wide">
                 SUBMITTED
@@ -516,7 +1073,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
 
           <div class="border-t pt-3">
             <span class="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-1">
-              Description
+              ${t.descLabel}
             </span>
             <p class="text-[11px] leading-relaxed text-slate-700 italic bg-slate-50 p-2.5 rounded border border-slate-200">
               "${description}"
@@ -537,7 +1094,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                 Issue Severity
               </span>
               <span class="font-bold block text-slate-700">
-                ${severity}
+                ${t['severity' + severity] || severity}
               </span>
             </div>
           </div>
@@ -545,21 +1102,20 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
 
         <div class="border-t-2 border-slate-800 pt-6 mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[9px] relative z-10">
           <div class="max-w-xs text-slate-400">
-            <p class="font-bold">Disclaimer:</p>
+            <p class="font-bold">${t.receiptDisclaimerLabel}</p>
             <p class="leading-tight mt-0.5">
-              This is a digitally generated acknowledgement receipt from the JanSetu AI portal. No physical signature is required. All records are secured using cryptographic hashes on government servers.
+              ${t.receiptDisclaimerText}
             </p>
           </div>
           <div class="text-right self-end sm:self-auto border border-dashed border-slate-400 p-2 rounded bg-slate-50">
-            <div class="font-black text-[#000080] uppercase tracking-wider">JanSetu AI Secure</div>
-            <div class="text-slate-400 font-mono mt-0.5">REF: ${submittedId.substring(4) || 'XXXX'}</div>
-            <div class="text-slate-400">STATUS: VERIFIED</div>
+            <div class="font-black text-[#000080] uppercase tracking-wider">${t.receiptSecureLabel}</div>
+            <div class="text-slate-400 font-mono mt-0.5">REF: ${(submittedId && submittedId.substring(4)) || 'XXXX'}</div>
+            <div class="text-slate-400">${t.receiptStatusVerified}</div>
           </div>
         </div>
       </div>
     `);
     
-    printWindow.document.write('</body></html>');
     printWindow.document.close();
     
     setTimeout(() => {
@@ -617,7 +1173,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             JanSetu AI
           </h1>
           <p className="text-xs md:text-sm font-semibold text-[#138808] mt-1.5 leading-relaxed">
-            {language === 'hi' ? 'एआई-संचालित निर्वाचन क्षेत्र विकास मंच' : language === 'mr' ? 'एआय-संचालित मतदारसंघ विकास मंच' : 'AI-Powered Constituency Development Platform'}
+            {t.devPlatformSub}
           </p>
         </div>
       </div>
@@ -674,7 +1230,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                     }`}
                   >
                     <span className="text-3xl mb-2.5 block filter drop-shadow-sm select-none">{cat.icon}</span>
-                    <span className="text-xs block font-bold leading-tight">{cat.title[language]}</span>
+                    <span className="text-xs block font-bold leading-tight">{t[cat.titleKey]}</span>
                     
                     {isSelected && (
                       <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-[#138808] text-white flex items-center justify-center shadow">
@@ -757,7 +1313,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                                 : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50/50')
                         }`}
                       >
-                        <span className="text-xs font-bold leading-snug">{sub.label[language]}</span>
+                        <span className="text-xs font-bold leading-snug">{t[sub.labelKey]}</span>
                         {isSelected && (
                           <Check className={`h-4 w-4 shrink-0 ${highContrast ? 'text-yellow-400' : 'text-[#FF9933]'}`} />
                         )}
@@ -827,7 +1383,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {impactsList.map((imp) => {
                 const isSelected = impact === imp.id;
-                const localizedImpact = language === 'en' ? imp.label : language === 'hi' ? (imp.id === '1000+' ? '1000+' : imp.id) : (imp.id === '1000+' ? '१०००+' : imp.id);
+                const localizedImpact = imp.label;
                 return (
                   <button
                     key={imp.id}
@@ -861,135 +1417,149 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
               highContrast ? 'text-yellow-300' : 'text-slate-700'
             }`}>
               <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">5</span>
-              <span>STEP 5 : REPORTING METHOD & DETAILS / रिपोर्टिंग विधि और विवरण</span>
+              <span>{t.step5Title}</span>
             </h3>
 
-            {/* The 4 boxes Selection Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            {/* Redesigned unified input section */}
+            <div className="space-y-6">
               
-              {/* Voice Input Card */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('voice')}
-                className={`flex flex-col items-start text-left p-5 rounded-xl border-2 transition-all duration-200 group cursor-pointer ${
-                  selectedMethod === 'voice'
-                    ? (highContrast ? 'border-yellow-400 bg-yellow-400/10' : 'border-[#000080] bg-[#000080]/5')
-                    : (highContrast ? 'border-slate-700 hover:border-yellow-500/55' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50')
-                }`}
-              >
-                <div className={`p-3 rounded-lg mb-4 transition-colors ${
-                  selectedMethod === 'voice'
-                    ? (highContrast ? 'bg-yellow-400 text-black' : 'bg-[#000080] text-white')
-                    : (highContrast ? 'bg-slate-800 text-yellow-300' : 'bg-slate-100 text-slate-700')
-                }`}>
-                  <Mic className="h-5 w-5" />
+              {/* Optional Citizen Name field */}
+              <div className="max-w-lg">
+                <label className="block text-xs font-black uppercase tracking-wider mb-2 text-slate-500">
+                  {language === 'hi' ? 'आपका नाम (वैकल्पिक)' : language === 'mr' ? 'आपले नाव (पर्यायी)' : 'Your Name (Optional)'}
+                </label>
+                <input
+                  type="text"
+                  value={citizenName}
+                  onChange={(e) => setCitizenName(e.target.value)}
+                  placeholder={language === 'hi' ? 'अपना नाम दर्ज करें' : language === 'mr' ? 'आपले नाव प्रविष्ट करा' : 'Enter your name'}
+                  className={`w-full p-3.5 rounded-xl border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                    highContrast
+                      ? 'bg-[#0f172a] border-yellow-500/55 text-yellow-300'
+                      : 'bg-white border-slate-200 text-slate-800'
+                  }`}
+                />
+              </div>
+
+              {/* Layout: Upload Image Button | Multiline Complaint Textarea | Microphone Button */}
+              <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+                
+                {/* Upload Image Button / Preview */}
+                <div className="flex-shrink-0 w-full lg:w-48 flex flex-col justify-center">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".jpg,.jpeg,.png"
+                    className="hidden"
+                  />
+                  
+                  {!photoPreviewUrl ? (
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragOver={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current.click()}
+                      className={`w-full h-32 lg:h-full border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[128px] ${
+                        dragActive
+                          ? 'border-[#FF9933] bg-[#FF9933]/5'
+                          : (highContrast 
+                              ? 'border-yellow-500/50 hover:border-yellow-400 bg-slate-900/10' 
+                              : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50/50')
+                      }`}
+                    >
+                      <Upload className="h-8 w-8 text-slate-400 mb-2 opacity-60" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-normal">
+                        {t.dragDropText || 'Upload Photo'}
+                      </span>
+                      <span className="text-[9px] opacity-50 mt-1 uppercase font-bold text-slate-500">
+                        {language === 'hi' ? 'केवल छवियां' : language === 'mr' ? 'फक्त प्रतिमा' : 'Images Only'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className={`p-2.5 rounded-xl border relative w-full h-full min-h-[128px] flex flex-col justify-between ${
+                      highContrast ? 'bg-[#0f172a] border-yellow-500/30' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <div className="relative flex-1 rounded-lg overflow-hidden flex justify-center bg-black/5 min-h-[90px] items-center">
+                        <img 
+                          src={photoPreviewUrl} 
+                          alt="Complaint Preview" 
+                          className="max-h-24 object-contain rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={removePhoto}
+                          className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center shadow transition cursor-pointer"
+                          title={t.removePhotoBtn}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      
+                      <div className="mt-2 flex items-center justify-between text-[10px] font-semibold px-1">
+                        <span className="truncate max-w-[70%] text-slate-500">
+                          {photoFile?.name || 'Image'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={removePhoto}
+                          className="text-red-500 hover:underline cursor-pointer"
+                        >
+                          {t.removePhotoBtn || 'Remove'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <h4 className="font-bold text-base md:text-lg mb-1.5 flex items-center gap-1.5">
-                  {t.voiceTitle}
-                  <span className="text-[10px] bg-[#FF9933] text-white px-1.5 py-0.5 rounded font-black">AI</span>
-                </h4>
-                <p className="text-xs opacity-80 leading-relaxed">
-                  {t.voiceDesc}
-                </p>
-              </button>
 
-              {/* Text Complaint Card */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('text')}
-                className={`flex flex-col items-start text-left p-5 rounded-xl border-2 transition-all duration-200 group cursor-pointer ${
-                  selectedMethod === 'text'
-                    ? (highContrast ? 'border-yellow-400 bg-yellow-400/10' : 'border-[#000080] bg-[#000080]/5')
-                    : (highContrast ? 'border-slate-700 hover:border-yellow-500/55' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50')
-                }`}
-              >
-                <div className={`p-3 rounded-lg mb-4 transition-colors ${
-                  selectedMethod === 'text'
-                    ? (highContrast ? 'bg-yellow-400 text-black' : 'bg-[#000080] text-white')
-                    : (highContrast ? 'bg-slate-800 text-yellow-300' : 'bg-slate-100 text-slate-700')
-                }`}>
-                  <FileText className="h-5 w-5" />
+                {/* Multiline Complaint Textarea */}
+                <div className="flex-1 flex flex-col relative min-h-[128px]">
+                  <label className="block text-xs font-black uppercase tracking-wider mb-2 text-slate-500">
+                    {t.descLabel} <span className="text-red-500">*</span>
+                  </label>
+
+                  {validationErrors.description && (
+                    <p className="mb-2 text-xs font-bold text-red-500 flex items-center space-x-1">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>{validationErrors.description}</span>
+                    </p>
+                  )}
+
+                  <div className="relative flex-1">
+                    <textarea
+                      value={description}
+                      onChange={handleDescChange}
+                      placeholder={getDescriptionPlaceholder()}
+                      rows={5}
+                      className={`w-full h-full p-4 rounded-xl border text-sm font-semibold transition resize-none ${
+                        highContrast 
+                          ? 'bg-[#0f172a] border-yellow-500 text-yellow-300 placeholder-yellow-500/50' 
+                          : 'bg-slate-50 border-slate-300 text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20'
+                      }`}
+                    />
+                    <div className="absolute bottom-3 right-3 text-[10px] font-semibold opacity-60 text-slate-500">
+                      {maxCharCount - description.length} {t.charRemaining}
+                    </div>
+                  </div>
                 </div>
-                <h4 className="font-bold text-base md:text-lg mb-1.5">
-                  {t.textTitle}
-                </h4>
-                <p className="text-xs opacity-80 leading-relaxed">
-                  {t.textDesc}
-                </p>
-              </button>
 
-              {/* Photo Card */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('photo')}
-                className={`flex flex-col items-start text-left p-5 rounded-xl border-2 transition-all duration-200 group cursor-pointer ${
-                  selectedMethod === 'photo'
-                    ? (highContrast ? 'border-yellow-400 bg-yellow-400/10' : 'border-[#000080] bg-[#000080]/5')
-                    : (highContrast ? 'border-slate-700 hover:border-yellow-500/55' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50')
-                }`}
-              >
-                <div className={`p-3 rounded-lg mb-4 transition-colors ${
-                  selectedMethod === 'photo'
-                    ? (highContrast ? 'bg-yellow-400 text-black' : 'bg-[#000080] text-white')
-                    : (highContrast ? 'bg-slate-800 text-yellow-300' : 'bg-slate-100 text-slate-700')
-                }`}>
-                  <Camera className="h-5 w-5" />
-                </div>
-                <h4 className="font-bold text-base md:text-lg mb-1.5 flex items-center gap-1.5">
-                  {t.photoTitle}
-                  <span className="text-[10px] bg-[#138808] text-white px-1.5 py-0.5 rounded font-black">LIVE</span>
-                </h4>
-                <p className="text-xs opacity-80 leading-relaxed">
-                  {t.photoDesc}
-                </p>
-              </button>
-
-              {/* Location Detection Card */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('location')}
-                className={`flex flex-col items-start text-left p-5 rounded-xl border-2 transition-all duration-200 group cursor-pointer ${
-                  selectedMethod === 'location'
-                    ? (highContrast ? 'border-yellow-400 bg-yellow-400/10' : 'border-[#000080] bg-[#000080]/5')
-                    : (highContrast ? 'border-slate-700 hover:border-yellow-500/55' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50')
-                }`}
-              >
-                <div className={`p-3 rounded-lg mb-4 transition-colors ${
-                  selectedMethod === 'location'
-                    ? (highContrast ? 'bg-yellow-400 text-black' : 'bg-[#000080] text-white')
-                    : (highContrast ? 'bg-slate-800 text-yellow-300' : 'bg-slate-100 text-slate-700')
-                }`}>
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <h4 className="font-bold text-base md:text-lg mb-1.5">
-                  {t.locationTitle}
-                </h4>
-                <p className="text-xs opacity-80 leading-relaxed">
-                  {t.locationDesc}
-                </p>
-              </button>
-
-            </div>
-
-            {/* DYNAMIC COMPONENT: VOICE INPUT SIMULATOR */}
-            {selectedMethod === 'voice' && (
-              <div className="mb-6">
-                <p className="text-xs opacity-75 mb-3">{t.step6Subtitle}</p>
-                <div className="max-w-xl mx-auto">
-                  <div className={`p-5 rounded-xl border flex flex-col items-center text-center ${
+                {/* Microphone Button with Simulator */}
+                <div className="flex-shrink-0 w-full lg:w-48 flex flex-col justify-center">
+                  <div className={`w-full h-32 lg:h-full p-4 rounded-xl border flex flex-col items-center justify-center text-center min-h-[128px] ${
                     highContrast 
                       ? 'bg-[#0f172a] border-yellow-500/30' 
-                      : 'bg-slate-50 border-slate-100'
+                      : 'bg-slate-50 border-slate-200'
                   }`}>
                     {isRecording ? (
-                      <div className="flex items-end justify-center space-x-1.5 h-10 mb-4 select-none">
-                        {[...Array(12)].map((_, i) => {
-                          const heights = [16, 28, 40, 24, 36, 12, 32, 20, 28, 16, 36, 20];
-                          const delays = [0.1, 0.4, 0.2, 0.6, 0.3, 0.5, 0.1, 0.4, 0.2, 0.5, 0.3, 0.1];
+                      <div className="flex items-end justify-center space-x-1 h-8 mb-2 select-none">
+                        {[...Array(8)].map((_, i) => {
+                          const heights = [12, 24, 32, 20, 28, 10, 26, 16];
+                          const delays = [0.1, 0.4, 0.2, 0.6, 0.3, 0.5, 0.1, 0.4];
                           return (
                             <div 
                               key={i} 
-                              className="w-1 bg-[#FF9933] rounded-full soundwave-bar-animated"
+                              className="w-1 bg-[#FF9933] rounded-full soundwave-bar-animated animate-pulse"
                               style={{
                                 height: `${heights[i]}px`,
                                 animationDelay: `${delays[i]}s`
@@ -999,19 +1569,19 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                         })}
                       </div>
                     ) : (
-                      <div className="h-10 mb-4 flex items-center justify-center select-none">
-                        <Mic className="h-8 w-8 text-slate-400 opacity-60" />
+                      <div className="h-8 mb-2 flex items-center justify-center select-none">
+                        <Mic className="h-6 w-6 text-slate-400 opacity-60" />
                       </div>
                     )}
 
-                    <span className="text-[11px] font-extrabold tracking-wide uppercase mb-3 text-slate-500">
-                      {isRecording ? t.voiceListening : t.voiceIdle}
+                    <span className="text-[9px] font-extrabold tracking-wide uppercase mb-2 text-slate-500 block leading-tight">
+                      {isRecording ? t.voiceListening : (language === 'hi' ? 'आवाज़ रिकॉर्ड करें' : language === 'mr' ? 'आवाज रेकॉर्ड करा' : 'Record Voice')}
                     </span>
 
                     <button
                       type="button"
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`px-6 py-2.5 rounded-full text-xs font-black transition cursor-pointer flex items-center space-x-1.5 shadow ${
+                      className={`px-4 py-2 rounded-full text-[10px] font-black transition cursor-pointer flex items-center space-x-1 shadow ${
                         isRecording
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : (highContrast 
@@ -1021,216 +1591,22 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                     >
                       {isRecording ? (
                         <>
-                          <MicOff className="h-4 w-4" />
+                          <MicOff className="h-3.5 w-3.5" />
                           <span>{t.voiceRecordStop}</span>
                         </>
                       ) : (
                         <>
-                          <Mic className="h-4 w-4" />
+                          <Mic className="h-3.5 w-3.5" />
                           <span>{t.voiceRecordStart}</span>
                         </>
                       )}
                     </button>
-
-                    {voiceCompleted && voiceTranscript && (
-                      <div className={`mt-4 w-full text-left p-3.5 rounded-lg border text-xs leading-relaxed ${
-                        highContrast 
-                          ? 'bg-[#1e293b] border-yellow-500/30 text-yellow-300' 
-                          : 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
-                      }`}>
-                        <div className="flex items-center space-x-1 mb-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400">
-                          <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                          <span>{t.voiceSuccess}</span>
-                        </div>
-                        "{voiceTranscript}"
-                      </div>
-                    )}
                   </div>
                 </div>
+
               </div>
-            )}
 
-            {/* DYNAMIC COMPONENT: PHOTO SELECTOR SIMULATOR */}
-            {selectedMethod === 'photo' && (
-              <div className="mb-6">
-                <p className="text-[11px] opacity-75 mb-3">{t.step7Helper}</p>
-                <div className="max-w-xl mx-auto">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".jpg,.jpeg,.png"
-                    className="hidden"
-                  />
-
-                  {!photoPreviewUrl ? (
-                    <div
-                      onDragEnter={handleDrag}
-                      onDragOver={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current.click()}
-                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition flex flex-col items-center ${
-                        dragActive
-                          ? 'border-[#FF9933] bg-[#FF9933]/5'
-                          : (highContrast 
-                              ? 'border-yellow-500/50 hover:border-yellow-400 bg-slate-900/10' 
-                              : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50/50')
-                      }`}
-                    >
-                      <Upload className="h-10 w-10 text-slate-400 mb-3 opacity-60" />
-                      <span className="text-xs font-bold leading-normal text-slate-700 dark:text-slate-300">
-                        {t.dragDropText}
-                      </span>
-                      <span className="text-[10px] opacity-50 mt-1 uppercase font-bold">
-                        Supports: JPG, JPEG, PNG
-                      </span>
-                    </div>
-                  ) : (
-                    <div className={`p-4 rounded-xl border relative ${
-                      highContrast ? 'bg-[#0f172a] border-yellow-500/30' : 'bg-slate-50 border-slate-100'
-                    }`}>
-                      <div className="relative max-h-56 rounded-lg overflow-hidden flex justify-center bg-black/5">
-                        <img 
-                          src={photoPreviewUrl} 
-                          alt="Complaint Preview" 
-                          className="max-h-56 object-contain"
-                        />
-                        <button
-                          type="button"
-                          onClick={removePhoto}
-                          className="absolute top-2.5 right-2.5 h-7 w-7 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center shadow transition cursor-pointer"
-                          title={t.removePhotoBtn}
-                        >
-                          <X className="h-4.5 w-4.5" />
-                        </button>
-                      </div>
-                      
-                      <div className="mt-3 flex items-center justify-between text-xs font-semibold px-1">
-                        <span className="truncate max-w-[70%] text-slate-500">
-                          {photoFile?.name || 'Uploaded Image'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={removePhoto}
-                          className="text-red-500 hover:underline cursor-pointer"
-                        >
-                          {t.removePhotoBtn}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC COMPONENT: GPS DETECTOR SIMULATOR (Only shown if selectedMethod is location) */}
-            {selectedMethod === 'location' && (
-              <div className="mb-6">
-                {validationErrors.location && (
-                  <p className="mb-4 text-xs font-bold text-red-500 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>{validationErrors.location}</span>
-                  </p>
-                )}
-
-                <div className="max-w-xl mx-auto">
-                  <div className={`p-5 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
-                    highContrast 
-                      ? 'bg-[#0f172a] border-yellow-500/30' 
-                      : 'bg-slate-50 border-slate-100'
-                  }`}>
-                    <div className="flex items-center space-x-3 text-left">
-                      <div className={`p-2.5 rounded-full ${
-                        locationSuccess ? 'bg-[#138808] text-white' : 'bg-slate-200 text-slate-400'
-                      }`}>
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black block">
-                          {locationSuccess ? t.locationCapturedLabel : 'GPS Location Required'}
-                        </span>
-                        {locationSuccess && locationCoords ? (
-                          <span className="text-[10px] text-slate-400 font-semibold block leading-tight mt-0.5">
-                            Lat: {locationCoords.lat.toFixed(5)}, Lng: {locationCoords.lng.toFixed(5)}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-semibold block leading-tight mt-0.5">
-                            Location coordinates help determine constituency routing.
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={detectLocation}
-                      disabled={isDetectingLocation}
-                      className={`w-full sm:w-auto px-6 py-2.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center justify-center space-x-1.5 ${
-                        isDetectingLocation 
-                          ? 'bg-slate-350 text-slate-500 cursor-not-allowed' 
-                          : (highContrast 
-                              ? 'bg-yellow-400 hover:bg-yellow-500 text-black shadow' 
-                              : 'bg-[#000080] hover:bg-blue-900 text-white shadow')
-                      }`}
-                    >
-                      {isDetectingLocation ? (
-                        <>
-                          <span className="h-3.5 w-3.5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin mr-1" />
-                          <span>Acquiring...</span>
-                        </>
-                      ) : (
-                        <>
-                          <MapPin className="h-4 w-4" />
-                          <span>{t.step8Button}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {locationSuccess && (
-                    <div className="mt-3.5 flex items-center space-x-1.5 px-1 text-xs font-bold text-[#138808] animate-fadeIn">
-                      <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
-                      <span>{t.locationSuccessAlert}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ALWAYS SHOW DESCRIPTION TEXTAREA */}
-            <div id="error-anchor-description" className="mt-6 pt-6 border-t border-slate-100/10">
-              <label className="block text-xs font-black uppercase tracking-wider mb-3 text-slate-500">
-                {t.descLabel} <span className="text-red-500">*</span>
-              </label>
-
-              {validationErrors.description && (
-                <p className="mb-4 text-xs font-bold text-red-500 flex items-center space-x-1">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{validationErrors.description}</span>
-                </p>
-              )}
-
-              <div className="relative">
-                <textarea
-                  value={description}
-                  onChange={handleDescChange}
-                  placeholder={getDescriptionPlaceholder()}
-                  rows={5}
-                  className={`w-full p-4 rounded-xl border text-sm font-semibold transition resize-none ${
-                    highContrast 
-                      ? 'bg-[#0f172a] border-yellow-500 text-yellow-300 placeholder-yellow-500/50' 
-                      : 'bg-slate-50 border-slate-300 text-slate-800 placeholder-slate-400 focus:bg-white'
-                  }`}
-                />
-                <div className="absolute bottom-3 right-3 text-[10px] font-semibold opacity-60">
-                  {maxCharCount - description.length} {t.charRemaining}
-                </div>
-              </div>
-            </div>
-
-            {/* GPS LOCATION DETECTION (Only shown if selectedMethod is NOT location, to make sure location is captured) */}
-            {selectedMethod !== 'location' && (
+              {/* Always display GPS location detection here */}
               <div id="error-anchor-location" className="mt-6 pt-6 border-t border-slate-100/10">
                 <label className="block text-xs font-black uppercase tracking-wider mb-3 text-slate-500">
                   {t.locationTitle} <span className="text-red-500">*</span>
@@ -1243,11 +1619,11 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                   </p>
                 )}
 
-                <div className="max-w-xl mx-auto">
+                <div className="max-w-xl">
                   <div className={`p-5 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
                     highContrast 
                       ? 'bg-[#0f172a] border-yellow-500/30' 
-                      : 'bg-slate-50 border-slate-100'
+                      : 'bg-slate-50 border-slate-200'
                   }`}>
                     <div className="flex items-center space-x-3 text-left">
                       <div className={`p-2.5 rounded-full ${
@@ -1256,7 +1632,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                         <MapPin className="h-5 w-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-black block">
+                        <span className="text-xs font-black block text-slate-700 dark:text-slate-200">
                           {locationSuccess ? t.locationCapturedLabel : 'GPS Location Required'}
                         </span>
                         {locationSuccess && locationCoords ? (
@@ -1303,9 +1679,12 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                       <span>{t.locationSuccessAlert}</span>
                     </div>
                   )}
+
+                  {renderAddressFields()}
                 </div>
               </div>
-            )}
+
+            </div>
 
           </div>
 
@@ -1326,7 +1705,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
               highContrast ? 'text-yellow-300' : 'text-slate-700'
             }`}>
               <Info className="h-5 w-5 text-[#000080]" />
-              <span>STEP 6 : WHY THIS INFORMATION MATTERS / यह जानकारी क्यों महत्वपूर्ण है</span>
+              <span>{t.step6Title}</span>
             </h3>
             
             <p className="text-xs leading-relaxed opacity-85 pl-7 text-justify">
@@ -1344,7 +1723,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
               highContrast ? 'text-yellow-300' : 'text-slate-700'
             }`}>
               <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">7</span>
-              <span>STEP 7 : REVIEW SUBMISSION / सबमिशन की समीक्षा करें</span>
+              <span>{t.step7Title}</span>
             </h3>
 
             {/* Structured Summary Review Container */}
@@ -1355,27 +1734,27 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                 
                 {/* Category summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">Category</span>
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.categoryLabel}</span>
                   <span className="font-extrabold text-right">
-                    {selectedCategory ? (categoriesData.find(c => c.id === selectedCategory)?.title[language] || selectedCategory) : '-'}
+                    {selectedCategory ? (t[categoriesData.find(c => c.id === selectedCategory)?.titleKey] || selectedCategory) : '-'}
                   </span>
                 </div>
 
                 {/* Subcategory summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">Subcategory</span>
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.subCategoryLabel}</span>
                   <span className="font-extrabold text-right">
                     {selectedCategory === 'other' 
                       ? (customCategoryText || '-') 
                       : (selectedSubcategory 
-                          ? (subcategoriesData[selectedCategory]?.find(s => s.id === selectedSubcategory)?.label[language] || selectedSubcategory) 
+                          ? (t[subcategoriesData[selectedCategory]?.find(s => s.id === selectedSubcategory)?.labelKey] || selectedSubcategory) 
                           : '-')}
                   </span>
                 </div>
 
                 {/* Severity summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">Severity</span>
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.severityLabel}</span>
                   <span className="font-extrabold flex items-center space-x-1 text-right">
                     <span className={`h-2 w-2 rounded-full ${severitiesList.find(s => s.id === severity)?.color || 'bg-slate-400'}`} />
                     <span>{t[`severity${severity}`] || severity}</span>
@@ -1384,25 +1763,25 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
 
                 {/* Population Affected summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">Estimated Impact</span>
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.estimatedImpactLabel}</span>
                   <span className="font-extrabold text-right">
-                    {impact ? (language === 'mr' && impact === '1000+' ? '१०००+' : impact) : '-'}
+                    {impact ? impact : '-'}
                   </span>
                 </div>
 
                 {/* Photo summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">Photo Attachment</span>
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.photoAttachmentLabel}</span>
                   <span className={`font-extrabold text-right uppercase text-[10px] ${photoFile ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {photoFile ? t.photoUploadedLabel : 'No Image'}
+                    {photoFile ? t.photoUploadedLabel : t.noImageLabel}
                   </span>
                 </div>
 
                 {/* Location summary */}
                 <div className="py-2 border-b border-slate-100/10 flex justify-between gap-2">
-                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">GPS Coordinate</span>
-                  <span className={`font-extrabold text-right uppercase text-[10px] ${locationCoords ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {locationCoords ? t.locationCapturedLabel : 'Pending'}
+                  <span className="opacity-60 font-semibold uppercase text-[9px] tracking-wide">{t.gpsCoordinateLabel}</span>
+                  <span className={`font-extrabold text-right uppercase text-[10px] ${locationCoords ? t.locationCapturedLabel : t.pendingLabel}`}>
+                    {locationCoords ? t.locationCapturedLabel : t.pendingLabel}
                   </span>
                 </div>
               </div>
@@ -1428,7 +1807,13 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
           </div>
 
           {/* SUBMIT BUTTON CONTROL */}
-          <div className="flex justify-center pt-4">
+          <div className="flex flex-col items-center pt-4">
+            {validationErrors.submit && (
+              <div className="w-full sm:w-80 p-4 mb-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{validationErrors.submit}</span>
+              </div>
+            )}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1526,7 +1911,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                   }`}
                 >
                   <FileText className="h-4 w-4" />
-                  <span>{language === 'hi' ? 'कृपया अपनी रसीद डाउनलोड करें' : language === 'mr' ? 'कृपया आपली पावती डाउनलोड करा' : 'Please download your receipt'}</span>
+                  <span>{t.downloadReceipt}</span>
                 </button>
 
                 <button
@@ -1540,7 +1925,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                       : 'bg-[#000080] hover:bg-blue-900 text-white'
                   }`}
                 >
-                  <span>{t.trackRequestBtn || 'Track Request'}</span>
+                  <span>{t.trackRequest}</span>
                 </button>
                 
                 <button

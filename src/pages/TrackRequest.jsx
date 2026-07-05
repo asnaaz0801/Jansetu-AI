@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { 
   Search, 
   FileText, 
@@ -26,25 +26,201 @@ import {
   Compass
 } from 'lucide-react';
 import { translations } from '../lib/translations';
-import { db } from '../lib/db';
+import { supabase } from '../lib/db';
 import emblemOfIndia from '../assets/emblem-of-india.svg';
 import ashokaChakra from '../assets/ashoka-chakra.svg';
+const MOCK_TRACK_DATA = {
+  'JSA-DEMO-0001': {
+    id: 'JSA-DEMO-0001',
+    title: 'Water Supply: Low Pressure and Contaminated Water',
+    description: 'We have been receiving yellow-ish, contaminated water for the past 5 days. The pressure is also extremely low, making it difficult to fill household containers.',
+    category: 'Water Supply',
+    subcategory: 'Contaminated Water',
+    location: 'Wazirpur, Phase 1',
+    area: 'Wazirpur',
+    city: 'Delhi',
+    district: 'North Delhi',
+    state: 'Delhi',
+    pincode: '110052',
+    submittedBy: 'Amit Kumar',
+    createdAt: '2026-07-01T10:00:00.000Z',
+    status: 'Development Planning',
+    currentStage: 5,
+    priority: 'High',
+    confidenceScore: '92%',
+    citizensAffected: '350+',
+    recommendedAction: 'Pipeline Flushing and Pressure Valve Regulation',
+    aiInsights: {
+      sentiment: 'Highly Concerned / Dissatisfied',
+      urgency: 'High (Public Health Risk)',
+    },
+    coordinates: { lat: 28.6946, lng: 77.1687 },
+    updates: [
+      { stage: 1, title: 'complaintSubmittedUpdate', date: 'Jul 1, 2026', time: '10:00 AM' },
+      { stage: 2, title: 'aiAnalysisCompletedUpdate', date: 'Jul 1, 2026', time: '10:05 AM' },
+      { stage: 3, title: 'priorityScoreGeneratedUpdate', date: 'Jul 1, 2026', time: '10:15 AM' },
+      { stage: 4, title: 'reviewedByPlanningUpdate', date: 'Jul 1, 2026', time: '02:30 PM' },
+      { stage: 5, title: 'stageDevPlanning', date: 'Jul 2, 2026', time: '11:00 AM' },
+    ]
+  },
+  'JSA-DEMO-0002': {
+    id: 'JSA-DEMO-0002',
+    title: 'Roads: Major Potholes on Main Bazar Road',
+    description: 'Several massive potholes have formed near the main market square, causing traffic jams and multiple minor accidents of two-wheelers during night hours.',
+    category: 'Roads',
+    subcategory: 'Potholes',
+    location: 'Karol Bagh Market',
+    area: 'Karol Bagh',
+    city: 'Delhi',
+    district: 'Central Delhi',
+    state: 'Delhi',
+    pincode: '110005',
+    submittedBy: 'Neha Sharma',
+    createdAt: '2026-07-02T09:00:00.000Z',
+    status: 'All stages completed',
+    currentStage: 7,
+    priority: 'Critical',
+    confidenceScore: '96%',
+    citizensAffected: '800+',
+    recommendedAction: 'Immediate Road Patching & Resurfacing',
+    aiInsights: {
+      sentiment: 'Angry / Frustrated',
+      urgency: 'Critical (Accident Prone Area)',
+    },
+    coordinates: { lat: 28.6443, lng: 77.1895 },
+    updates: [
+      { stage: 1, title: 'complaintSubmittedUpdate', date: 'Jul 2, 2026', time: '09:00 AM' },
+      { stage: 2, title: 'aiAnalysisCompletedUpdate', date: 'Jul 2, 2026', time: '09:05 AM' },
+      { stage: 3, title: 'priorityScoreGeneratedUpdate', date: 'Jul 2, 2026', time: '09:15 AM' },
+      { stage: 4, title: 'reviewedByPlanningUpdate', date: 'Jul 2, 2026', time: '11:30 AM' },
+      { stage: 5, title: 'stageDevPlanning', date: 'Jul 2, 2026', time: '02:00 PM' },
+      { stage: 6, title: 'stageRecToMp', date: 'Jul 2, 2026', time: '04:00 PM' },
+      { stage: 7, title: 'actionInitiatedUpdate', date: 'Jul 3, 2026', time: '10:30 AM' },
+    ]
+  },
+  'JSA-DEMO-0003': {
+    id: 'JSA-DEMO-0003',
+    title: 'Electricity: Frequent Power Cuts (4+ Hours Daily)',
+    description: 'We are experiencing multiple unscheduled power cuts daily in our locality, especially during the afternoon heat. Voltage fluctuation is also damaging appliances.',
+    category: 'Electricity',
+    subcategory: 'Power Cuts',
+    location: 'Rohini Sector 8',
+    area: 'Rohini',
+    city: 'Delhi',
+    district: 'North West Delhi',
+    state: 'Delhi',
+    pincode: '110085',
+    submittedBy: 'Rajesh Gupta',
+    createdAt: '2026-07-02T15:00:00.000Z',
+    status: 'Under Review',
+    currentStage: 4,
+    priority: 'Medium',
+    confidenceScore: '89%',
+    citizensAffected: '600+',
+    recommendedAction: 'Substation Load Balancing & Transformer Check',
+    aiInsights: {
+      sentiment: 'Concerned / Stressed',
+      urgency: 'Medium (Summer Load Issue)',
+    },
+    coordinates: { lat: 28.7041, lng: 77.1251 },
+    updates: [
+      { stage: 1, title: 'complaintSubmittedUpdate', date: 'Jul 2, 2026', time: '03:00 PM' },
+      { stage: 2, title: 'aiAnalysisCompletedUpdate', date: 'Jul 2, 2026', time: '03:05 PM' },
+      { stage: 3, title: 'priorityScoreGeneratedUpdate', date: 'Jul 2, 2026', time: '03:15 PM' },
+      { stage: 4, title: 'reviewedByPlanningUpdate', date: 'Jul 3, 2026', time: '09:00 AM' },
+    ]
+  },
+  'JSA-DEMO-0004': {
+    id: 'JSA-DEMO-0004',
+    title: 'Sanitation: Garbage Overflow Near Public School',
+    description: 'The municipal dustbin near the entrance of Government Primary School has not been cleared for three days. Stray animals are scattering the waste on the road.',
+    category: 'Garbage',
+    subcategory: 'Overflow Dustbins',
+    location: 'Dwarka Sector 3',
+    area: 'Dwarka',
+    city: 'Delhi',
+    district: 'South West Delhi',
+    state: 'Delhi',
+    pincode: '110078',
+    submittedBy: 'Sunita Devi',
+    createdAt: '2026-07-03T08:00:00.000Z',
+    status: 'Submitted',
+    currentStage: 1,
+    priority: 'High',
+    confidenceScore: '91%',
+    citizensAffected: '200+',
+    recommendedAction: 'Urgent waste clearance and relocation of municipal bin',
+    aiInsights: {
+      sentiment: 'Alarmed / Concerned',
+      urgency: 'High (School Proximity Risk)',
+    },
+    coordinates: { lat: 28.5997, lng: 77.0396 },
+    updates: [
+      { stage: 1, title: 'complaintSubmittedUpdate', date: 'Jul 3, 2026', time: '08:00 AM' }
+    ]
+  }
+};
 
 export default function TrackRequest({ language, fontSize, highContrast }) {
   const t = translations[language];
   const location = useLocation();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [searchId, setSearchId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [searched, setSearched] = useState(false);
   const [currentRequest, setCurrentRequest] = useState(null);
-  const [localPriorities, setLocalPriorities] = useState([]);
+  const [latestIssueIds, setLatestIssueIds] = useState([]);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [latestNotice, setLatestNotice] = useState(null);
   
   const receiptRef = useRef();
 
   const mapInstanceRef = useRef(null);
   const userMarkerRef = useRef(null);
   const [detecting, setDetecting] = useState(false);
+
+  const fetchLatestIssue = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('issues')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setSearchId(data.reference_code || data.issue_id);
+        setCurrentRequest(mapSupabaseIssue(data));
+        setErrorMsg('');
+      } else {
+        setCurrentRequest(null);
+      }
+    } catch (err) {
+      console.error('Error fetching latest issue:', err);
+    }
+  };
+
+  const fetchLatestIssueIds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('issues')
+        .select('reference_code, issue_id')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (error) throw error;
+
+      if (data) {
+        const ids = data.map(item => item.reference_code || item.issue_id).filter(Boolean);
+        setLatestIssueIds(ids);
+      }
+    } catch (err) {
+      console.error('Error fetching latest issue IDs:', err);
+    }
+  };
 
   const handleDetectUserLocation = () => {
     const L = window.L;
@@ -76,14 +252,19 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
           .bindPopup('<div class="text-[10px] font-bold text-center">📍 You are here</div>')
           .addTo(mapInstanceRef.current);
 
-        const latToUse = currentRequest.coordinates?.lat || (currentRequest.lat ? currentRequest.lat : 28.6139);
-        const lngToUse = currentRequest.coordinates?.lng || (currentRequest.lng ? currentRequest.lng : 77.2090);
+        const latToUse = currentRequest.coordinates?.lat;
+        const lngToUse = currentRequest.coordinates?.lng;
         
-        const complaintLatLng = L.latLng(latToUse, lngToUse);
-        const userLatLng = L.latLng(lat, lng);
-        
-        const bounds = L.latLngBounds([complaintLatLng, userLatLng]);
-        mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+        if (typeof latToUse === 'number' && typeof lngToUse === 'number') {
+          const complaintLatLng = L.latLng(latToUse, lngToUse);
+          const userLatLng = L.latLng(lat, lng);
+          
+          const bounds = L.latLngBounds([complaintLatLng, userLatLng]);
+          mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+        } else {
+          // If no complaint coordinates, just pan to user location
+          mapInstanceRef.current.setView([lat, lng], 14);
+        }
         
         setDetecting(false);
         setTimeout(() => {
@@ -104,8 +285,8 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
     if (!L || !currentRequest) return;
     
     // Find coordinates (support both formats)
-    const lat = currentRequest.coordinates?.lat || (typeof currentRequest.lat === 'number' ? currentRequest.lat : 28.6139);
-    const lng = currentRequest.coordinates?.lng || (typeof currentRequest.lng === 'number' ? currentRequest.lng : 77.2090);
+    const lat = currentRequest.coordinates?.lat;
+    const lng = currentRequest.coordinates?.lng;
 
     // Cleanup existing map
     if (mapInstanceRef.current) {
@@ -113,80 +294,125 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
       mapInstanceRef.current = null;
     }
 
-    // Wait a brief tick to ensure container is in DOM
-    const mapTimer = setTimeout(() => {
-      const mapEl = document.getElementById('simple-issue-map');
-      if (!mapEl) return;
+    // Helper: initialize map at given lat/lng
+    const initMapAt = (mapLat, mapLng, isApproximate = false) => {
+      const mapTimer = setTimeout(() => {
+        const mapEl = document.getElementById('simple-issue-map');
+        if (!mapEl) return;
 
-      // Initialize map
-      const map = L.map('simple-issue-map', {
-        center: [lat, lng],
-        zoom: 14,
-        zoomControl: false,
-        attributionControl: false, // Hide Leaflet & OpenStreetMap attribution links
-        scrollWheelZoom: true,
-        gestureHandling: true
-      });
+        // Clear any existing placeholder
+        mapEl.innerHTML = '';
 
-      // Force recalculation of container size to prevent grey or misaligned tiles
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 150);
+        const map = L.map('simple-issue-map', {
+          center: [mapLat, mapLng],
+          zoom: isApproximate ? 12 : 14,
+          zoomControl: false,
+          attributionControl: false,
+          scrollWheelZoom: true,
+          gestureHandling: true
+        });
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
+        setTimeout(() => { map.invalidateSize(); }, 150);
 
-      // Apply CartoDB dark tiles or standard OpenStreetMap tiles based on highContrast/theme
-      const tileUrl = highContrast
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      L.tileLayer(tileUrl).addTo(map);
+        const tileUrl = highContrast
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+          : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        L.tileLayer(tileUrl).addTo(map);
 
-      // Custom Category colors matching the dashboard
-      const colors = {
-        'Roads': '#D97706',
-        'Garbage': '#16A34A',
-        'Water Supply': '#2563EB',
-        'Electricity': '#EAB308',
-        'Street Lights': '#8B5CF6',
-        'Drainage': '#0D9488',
-        'Public Safety': '#DC2626',
-      };
-      const color = colors[currentRequest.category] || '#475569';
+        const colors = {
+          'Roads': '#D97706', 'Garbage': '#16A34A', 'Water Supply': '#2563EB',
+          'Electricity': '#EAB308', 'Street Lights': '#8B5CF6',
+          'Drainage': '#0D9488', 'Public Safety': '#DC2626',
+        };
+        const color = colors[currentRequest.category] || '#475569';
 
-      // Custom marker pin
-      const issueIcon = L.divIcon({
-        html: `
-          <div class="relative flex items-center justify-center" style="width: 24px; height: 24px;">
-            <span class="absolute inline-flex h-full w-full rounded-full opacity-35 animate-ping" style="background-color: ${color};"></span>
-            <div class="relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px]" 
-                 style="background-color: ${color}; width: 14px; height: 14px; color: white;">
+        const issueIcon = L.divIcon({
+          html: `
+            <div class="relative flex items-center justify-center" style="width: 28px; height: 28px;">
+              <span class="absolute inline-flex h-full w-full rounded-full opacity-35 animate-ping" style="background-color: ${color};"></span>
+              <div class="relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px]" 
+                   style="background-color: ${color}; width: 16px; height: 16px; color: white;">
+              </div>
             </div>
-          </div>
-        `,
-        className: 'custom-div-icon',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
+          `,
+          className: 'custom-div-icon',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
 
-      const marker = L.marker([lat, lng], { icon: issueIcon }).addTo(map);
-      
-      // Popup details
-      const popupContent = `
-        <div class="p-1 font-sans text-xs">
-          <div class="font-black text-slate-900 border-b pb-1 mb-1">${currentRequest.id}</div>
-          <div class="font-bold text-slate-700 mb-0.5">${currentRequest.title}</div>
-          <div class="text-[10px] opacity-75">Category: ${currentRequest.category}</div>
-          <div class="text-[10px] opacity-75">Status: <span class="font-bold">${currentRequest.status}</span></div>
-        </div>
-      `;
-      marker.bindPopup(popupContent).openPopup();
-      
-      mapInstanceRef.current = map;
-    }, 100);
+        const marker = L.marker([mapLat, mapLng], { icon: issueIcon }).addTo(map);
+
+        const popupContent = `
+          <div class="p-1.5 font-sans text-xs min-w-[160px]">
+            <div class="font-bold text-slate-900 mb-1 border-b pb-1">📍 ${isApproximate ? 'Approximate Location' : 'Issue Location'}</div>
+            ${isApproximate ? '<div class="text-amber-600 text-[10px] mb-1">⚠ Approximate (address-based)</div>' : ''}
+            <div class="mb-0.5"><span class="font-semibold">Area:</span> ${currentRequest.area || 'Not Available'}</div>
+            <div class="mb-0.5"><span class="font-semibold">City:</span> ${currentRequest.city || 'Not Available'}</div>
+            <div class="mb-0.5"><span class="font-semibold">District:</span> ${currentRequest.district || 'Not Available'}</div>
+            <div><span class="font-semibold">State:</span> ${currentRequest.state || 'Not Available'}</div>
+          </div>
+        `;
+        marker.bindPopup(popupContent).openPopup();
+
+        mapInstanceRef.current = map;
+      }, 200);
+      return mapTimer;
+    };
+
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      // No exact coordinates — try to geocode address text via Nominatim
+      const addressText = [
+        currentRequest.area,
+        currentRequest.city,
+        currentRequest.district,
+        currentRequest.state,
+        'India'
+      ].filter(Boolean).join(', ');
+
+      if (addressText && addressText !== 'India') {
+        // Show loading state
+        const mapEl = document.getElementById('simple-issue-map');
+        if (mapEl) {
+          mapEl.innerHTML = `
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-xs text-slate-500 font-bold bg-slate-100 dark:bg-slate-900">
+              <span class="animate-spin text-xl mb-2">🗺️</span>
+              <span>Loading map location...</span>
+            </div>
+          `;
+        }
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressText)}&limit=1`, {
+          headers: { 'User-Agent': 'Jansetu-AI-App' }
+        })
+          .then(r => r.json())
+          .then(results => {
+            if (results && results.length > 0) {
+              const geocodedLat = parseFloat(results[0].lat);
+              const geocodedLng = parseFloat(results[0].lon);
+              initMapAt(geocodedLat, geocodedLng, true);
+            } else {
+              // Geocoding returned no results — show India center
+              initMapAt(20.5937, 78.9629, true);
+            }
+          })
+          .catch(() => {
+            // Network error — show India center
+            initMapAt(20.5937, 78.9629, true);
+          });
+      } else {
+        // No address at all — show India overview map
+        initMapAt(20.5937, 78.9629, true);
+      }
+      return;
+    }
+
+    // Exact GPS coordinates available — initialize map precisely
+    const mapTimer = initMapAt(lat, lng, false);
 
     return () => {
-      clearTimeout(mapTimer);
+      if (mapTimer) clearTimeout(mapTimer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -194,303 +420,220 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
     };
   }, [currentRequest, highContrast]);
 
-  // Core Hardcoded Mock Requests matching requirements
-  const MOCK_TRACK_DATA = {
-    'JSA-2026-0001': {
-      id: 'JSA-2026-0001',
-      title: language === 'en' ? 'Repair Main Street Water Pipeline' : language === 'hi' ? 'मुख्य सड़क पानी की पाइपलाइन की मरम्मत' : 'मुख्य रस्त्यावरील पाणी वाहिनी दुरुस्ती',
-      description: language === 'en' 
-        ? 'Multiple complaints from this locality indicate recurring water supply issues. Based on complaint frequency and affected population, this issue has been assigned High Priority and recommended for constituency planning.'
-        : language === 'hi' 
-        ? 'इस इलाके से कई शिकायतें बार-बार पानी की आपूर्ति की समस्याओं की ओर इशारा करती हैं। शिकायत की आवृत्ति और प्रभावित आबादी के आधार पर, इस मुद्दे को उच्च प्राथमिकता दी गई है और निर्वाचन क्षेत्र योजना के लिए अनुशंसित किया गया है।'
-        : 'या भागातील अनेक तक्रारी वारंवार पाणी पुरवठ्याच्या समस्या दर्शवतात. तक्रारींची संख्या आणि बाधित लोकसंख्येच्या आधारे या समस्येला उच्च प्राधान्य देण्यात आले आहे आणि मतदारसंघ नियोजनासाठी शिफारस करण्यात आली आहे.',
-      category: 'Infrastructure',
-      location: language === 'en' ? 'Ward 4 (North End)' : language === 'hi' ? 'वॉर्ड 4 (उत्तरी सिरा)' : 'वॉर्ड ४ (उत्तर भाग)',
-      district: language === 'en' ? 'New Delhi' : language === 'hi' ? 'नई दिल्ली' : 'नवी दिल्ली',
-      state: language === 'en' ? 'Delhi' : language === 'hi' ? 'दिल्ली' : 'दिल्ली',
-      submittedBy: 'David K.',
-      createdAt: '2026-06-10T09:00:00Z',
-      status: 'Under Review',
-      currentStage: 4, // Under Review
-      priority: 'High',
-      confidenceScore: '92%',
-      citizensAffected: '45,000+',
-      recommendedAction: language === 'en' ? 'Pipeline Upgrade' : language === 'hi' ? 'पाइपलाइन अपग्रेड' : 'पाईपलाईन अपग्रेड',
-      aiInsights: {
-        sentiment: language === 'en' ? 'Negative / Frustrated' : language === 'hi' ? 'नकारात्मक / असंतुष्ट' : 'नकारात्मक / संतप्त',
-        urgency: language === 'en' ? 'High (8.7/10)' : language === 'hi' ? 'उच्च (8.7/10)' : 'उच्च (८.७/१०)',
-        summary: language === 'en' 
-          ? 'Localized infrastructure failure causing water shortage. Historical logs show 4 duplicate reports within 48 hours.'
-          : language === 'hi'
-          ? 'स्थानीय बुनियादी ढांचे की विफलता के कारण पानी की कमी। ऐतिहासिक लॉग 48 घंटों के भीतर 4 डुप्लिकेट रिपोर्ट दिखाते हैं।'
-          : 'स्थानिक पायाभूत सुविधा बिघाडामुळे पाणी टंचाई. मागील ४८ तासांत ४ वेळा याच समस्येची नोंद झाली आहे.',
-        recommendation: language === 'en'
-          ? 'Systemic replacement of corrosive galvanized iron pipes with leak-proof HDPE lines.'
-          : language === 'hi'
-          ? 'लीक-प्रूफ एचडीपीई लाइनों के साथ संक्षारक जस्ती लोहे के पाइपों का प्रणालीगत प्रतिस्थापन।'
-          : 'गंजलेल्या गॅल्वनाइज्ड लोखंडी पाईप्स बदलून गळती-प्रतिबंधक HDPE पाईप्स बसवणे.'
-      },
-      coordinates: { lat: 28.6499, lng: 77.2450 },
-      updates: [
-        { stage: 1, title: 'complaintSubmittedUpdate', date: '2026-06-10', time: '09:00 AM' },
-        { stage: 2, title: 'aiAnalysisCompletedUpdate', date: '2026-06-10', time: '09:05 AM' },
-        { stage: 3, title: 'priorityScoreGeneratedUpdate', date: '2026-06-10', time: '10:12 AM' },
-        { stage: 4, title: 'reviewedByPlanningUpdate', date: '2026-06-11', time: '11:30 AM' },
-      ]
-    },
-    'JSA-2026-0002': {
-      id: 'JSA-2026-0002',
-      title: language === 'en' ? 'Install Solar Street Lights in Community Park' : language === 'hi' ? 'कम्युनिटी पार्क में सोलर स्ट्रीट लाइट लगाएं' : 'कम्युनिटी पार्कमध्ये सोलर पथदिवे बसवणे',
-      description: language === 'en'
-        ? 'The park is completely dark after sunset, raising security concerns for women and children who use the walking path.'
-        : language === 'hi'
-        ? 'सूर्यास्त के बाद पार्क में पूरी तरह से अंधेरा छा जाता है, जिससे टहलने वाले रास्ते का उपयोग करने वाली महिलाओं और बच्चों के लिए सुरक्षा संबंधी चिंताएं बढ़ जाती हैं।'
-        : 'सूर्यास्तानंतर उद्यानात पूर्णपणे अंधार असतो, ज्यामुळे चालण्याच्या मार्गाचा वापर करणाऱ्या महिला आणि मुलांच्या सुरक्षिततेबद्दल चिंता निर्माण होते.',
-      category: 'Public Safety',
-      location: language === 'en' ? 'Ward 7 (Green Valley)' : language === 'hi' ? 'वॉर्ड 7 (ग्रीन वैली)' : 'वॉर्ड ७ (ग्रीन व्हॅली)',
-      district: language === 'en' ? 'Central Delhi' : language === 'hi' ? 'मध्य दिल्ली' : 'मध्य दिल्ली',
-      state: language === 'en' ? 'Delhi' : language === 'hi' ? 'दिल्ली' : 'दिल्ली',
-      submittedBy: 'Sarah M.',
-      createdAt: '2026-06-05T14:15:00Z',
-      status: 'Action Initiated',
-      currentStage: 7, // Action Initiated
-      priority: 'Medium',
-      confidenceScore: '88%',
-      citizensAffected: '12,000+',
-      recommendedAction: language === 'en' ? 'Solar Illumination Grid' : language === 'hi' ? 'सौर प्रकाश ग्रिड' : 'सौर प्रकाश ग्रिड',
-      aiInsights: {
-        sentiment: language === 'en' ? 'Apprehensive' : language === 'hi' ? 'आशंकित' : 'काळजीयुक्त',
-        urgency: language === 'en' ? 'Medium (6.5/10)' : language === 'hi' ? 'मध्यम (6.5/10)' : 'मध्यम (६.५/१०)',
-        summary: language === 'en'
-          ? 'Lack of lighting creates safety hazards. Recommended for green energy integration.'
-          : language === 'hi'
-          ? 'रोशनी की कमी से सुरक्षा को खतरा। हरित ऊर्जा एकीकरण के लिए अनुशंसित।'
-          : 'प्रकाशव्यवस्थेच्या अभावामुळे सुरक्षेचा धोका. हरित ऊर्जा प्रकल्पासाठी शिफारस केली आहे.',
-        recommendation: language === 'en'
-          ? 'Install 15 Standalone Solar PV Pole Lamps along the park jogging perimeter.'
-          : language === 'hi'
-          ? 'पार्क जॉगिंग परिधि के साथ 15 स्टैंडअलोन सोलर पीवी पोल लैंप स्थापित करें।'
-          : 'उद्यानाच्या धावपट्टीभोवती १५ स्वयंचलित सौर पथदिवे खांब बसवा.'
-      },
-      coordinates: { lat: 28.6859, lng: 77.2990 },
-      updates: [
-        { stage: 1, title: 'complaintSubmittedUpdate', date: '2026-06-05', time: '02:15 PM' },
-        { stage: 2, title: 'aiAnalysisCompletedUpdate', date: '2026-06-05', time: '02:30 PM' },
-        { stage: 3, title: 'priorityScoreGeneratedUpdate', date: '2026-06-06', time: '11:00 AM' },
-        { stage: 4, title: 'reviewedByPlanningUpdate', date: '2026-06-08', time: '04:00 PM' },
-        { stage: 5, title: 'Development Planning', date: '2026-06-10', time: '02:00 PM' },
-        { stage: 6, title: 'recommendedToMpUpdate', date: '2026-06-12', time: '10:30 AM' },
-        { stage: 7, title: 'actionInitiatedUpdate', date: '2026-06-15', time: '09:00 AM' }
-      ]
-    },
-    'JSA-2026-0003': {
-      id: 'JSA-2026-0003',
-      title: language === 'en' ? 'Renovate Community Primary School Roof' : language === 'hi' ? 'सामुदायिक प्राथमिक विद्यालय की छत का नवीनीकरण' : 'प्राथमिक शाळेच्या छताची दुरुस्ती',
-      description: language === 'en'
-        ? 'The classroom roofs are leaking during rains, forcing school closures. Urgent tiling and waterproofing are required.'
-        : language === 'hi'
-        ? 'बारिश के दौरान क्लासरूम की छतें टपक रही हैं, जिससे स्कूल बंद करने के लिए मजबूर होना पड़ रहा है। तत्काल टाइलिंग और वॉटरप्रूफिंग की आवश्यकता है।'
-        : 'पावसाळ्यात वर्गाची छते गळतात, ज्यामुळे शाळा बंद ठेवावी लागते. तातडीने वॉटरप्रूफिंग आणि दुरुस्तीची गरज आहे.',
-      category: 'Education',
-      location: language === 'en' ? 'Ward 2 (Downtown)' : language === 'hi' ? 'वॉर्ड 2 (डाउनटाउन)' : 'वॉर्ड २ (मध्यवर्ती भाग)',
-      district: language === 'en' ? 'New Delhi' : language === 'hi' ? 'नई दिल्ली' : 'नवी दिल्ली',
-      state: language === 'en' ? 'Delhi' : language === 'hi' ? 'दिल्ली' : 'दिल्ली',
-      submittedBy: 'Robert T.',
-      createdAt: '2026-06-21T09:00:00Z',
-      status: 'Submitted',
-      currentStage: 1, // Submitted
-      priority: 'Critical',
-      confidenceScore: '95%',
-      citizensAffected: '400+ Students',
-      recommendedAction: language === 'en' ? 'Roof Reconstruction' : language === 'hi' ? 'छत का पुनर्निर्माण' : 'छताची पुनर्रचना',
-      aiInsights: {
-        sentiment: language === 'en' ? 'Distressed' : language === 'hi' ? 'व्यथित' : 'काळजीग्रस्त',
-        urgency: language === 'en' ? 'Critical (9.4/10)' : language === 'hi' ? 'गंभीर (9.4/10)' : 'अतिशय तातडीचे (९.४/१०)',
-        summary: language === 'en'
-          ? 'Water logging inside school premises. Immediate action required before monsoon peaks.'
-          : language === 'hi'
-          ? 'स्कूल परिसर के अंदर जलभराव। मानसून के चरम पर पहुंचने से पहले तत्काल कार्रवाई आवश्यक।'
-          : 'शाळेच्या आवारात पाणी साचणे. पावसाळा सुरू होण्यापूर्वी त्वरित कारवाई आवश्यक.',
-        recommendation: language === 'en'
-          ? 'Deploy emergency waterproof coating tarpaulins and clear budgetary allocation for cement re-casting.'
-          : language === 'hi'
-          ? 'आपातकालीन वॉटरप्रूफ कोटिंग तिरपाल तैनात करें और सीमेंट री-कास्टिंग के लिए बजटीय आवंटन स्वीकृत करें।'
-          : 'तात्पुरती वॉटरप्रूफ ताडपत्री बसवा आणि सिमेंटच्या छताच्या नवीन स्लॅबसाठी निधी मंजूर करा.'
-      },
-      coordinates: { lat: 28.6259, lng: 77.2150 },
-      updates: [
-        { stage: 1, title: 'complaintSubmittedUpdate', date: '2026-06-21', time: '09:00 AM' }
-      ]
-    },
-    'JSA-2026-0004': {
-      id: 'JSA-2026-0004',
-      title: language === 'en' ? 'Set up Public Health Clinic Waste Disposer' : language === 'hi' ? 'सार्वजनिक स्वास्थ्य क्लिनिक अपशिष्ट डिस्पोजर स्थापित करें' : 'आरोग्य केंद्रासाठी कचरा विल्हेवाट यंत्रणा',
-      description: language === 'en'
-        ? 'Medical waste is being piled behind the local clinic. Proper disposal incinerator/bin installation is needed urgently.'
-        : language === 'hi'
-        ? 'स्थानीय क्लिनिक के पीछे चिकित्सा कचरे का ढेर लगा हुआ है। उचित निपटान भस्मक/बिन स्थापना की तत्काल आवश्यकता है।'
-        : 'स्थानिक क्लिनिकच्या मागे वैद्यकीय कचऱ्याचा ढीग साचला आहे. योग्य विल्हेवाट लावण्यासाठी इन्सिनरेटर बसवणे गरजेचे आहे.',
-      category: 'Healthcare',
-      location: language === 'en' ? 'Ward 9 (Eastside)' : language === 'hi' ? 'वॉर्ड 9 (ईस्टसाइड)' : 'वॉर्ड ९ (पूर्व भाग)',
-      district: language === 'en' ? 'East Delhi' : language === 'hi' ? 'पूर्वी दिल्ली' : 'पूर्व दिल्ली',
-      state: language === 'en' ? 'Delhi' : language === 'hi' ? 'दिल्ली' : 'दिल्ली',
-      submittedBy: 'Dr. Aisha N.',
-      createdAt: '2026-06-22T08:30:00Z',
-      status: 'AI Analysis',
-      currentStage: 2, // AI Analysis
-      priority: 'Low',
-      confidenceScore: '85%',
-      citizensAffected: '3,500',
-      recommendedAction: language === 'en' ? 'Incinerator Assembly' : language === 'hi' ? 'भस्मक असेंबली' : 'इन्सिनरेटर असेंब्ली',
-      aiInsights: {
-        sentiment: language === 'en' ? 'Concerned / Professional' : language === 'hi' ? 'चिंतित / पेशेवर' : 'काळजीयुक्त / व्यावसायिक',
-        urgency: language === 'en' ? 'Low-Medium (4.2/10)' : language === 'hi' ? 'कम-मध्यम (4.2/10)' : 'कमी-मध्यम (४.२/१०)',
-        summary: language === 'en'
-          ? 'Hazardous medical waste piling up. Requires biosafety inspection before municipal clearance.'
-          : language === 'hi'
-          ? 'खतरनाक चिकित्सा अपशिष्ट का जमा होना। नगर निगम की मंजूरी से पहले जैव सुरक्षा निरीक्षण की आवश्यकता है।'
-          : 'धोकादायक वैद्यकीय कचरा साचत आहे. पालिका मंजुरीपूर्वी जैवसुरक्षा तपासणी आवश्यक आहे.',
-        recommendation: language === 'en'
-          ? 'Allocate dual-chamber medical waste bins and coordinate with Delhi Pollution Control Committee.'
-          : language === 'hi'
-          ? 'दोहरे कक्ष वाले चिकित्सा अपशिष्ट डिब्बे आवंटित करें और दिल्ली प्रदूषण नियंत्रण समिति के साथ समन्वय करें।'
-          : 'दोन भागांचे वैद्यकीय कचरा कुंडी उपलब्ध करा आणि प्रदूषण नियंत्रण मंडळाशी समन्वय साधा.'
-      },
-      coordinates: { lat: 28.7139, lng: 77.3090 },
-      updates: [
-        { stage: 1, title: 'complaintSubmittedUpdate', date: '2026-06-22', time: '08:30 AM' },
-        { stage: 2, title: 'aiAnalysisCompletedUpdate', date: '2026-06-22', time: '08:35 AM' }
-      ]
+  // Helper: map a Supabase issues row → the display shape expected by the UI
+  const mapSupabaseIssue = (row) => {
+    const createdAt = row.created_at || new Date().toISOString();
+    const dateStr = new Date(createdAt).toLocaleDateString(
+      `${language}-IN`,
+      { year: 'numeric', month: 'short', day: 'numeric' }
+    );
+
+    // Map DB status → stage number & text dynamically
+    let currentStage = 1;
+    let statusText = 'Submitted';
+    const dbStatus = row.status || 'Pending';
+    
+    if (dbStatus === 'Pending' || dbStatus === 'open') {
+      currentStage = 4;
+      statusText = 'Under Review';
+    } else if (dbStatus === 'In Progress') {
+      currentStage = 5;
+      statusText = 'Development Planning';
+    } else if (dbStatus === 'Resolved' || dbStatus === 'resolved') {
+      currentStage = 7;
+      statusText = 'All stages completed';
+    } else {
+      statusText = dbStatus;
+      currentStage = 1;
     }
+
+    const updates = [
+      { stage: 1, title: 'complaintSubmittedUpdate', date: dateStr, time: '10:00 AM' }
+    ];
+    if (currentStage >= 2) updates.push({ stage: 2, title: 'aiAnalysisCompletedUpdate',    date: dateStr, time: '10:05 AM' });
+    if (currentStage >= 3) updates.push({ stage: 3, title: 'priorityScoreGeneratedUpdate', date: dateStr, time: '10:15 AM' });
+    if (currentStage >= 4) updates.push({ stage: 4, title: 'reviewedByPlanningUpdate',     date: dateStr, time: '02:30 PM' });
+    if (currentStage >= 5) updates.push({ stage: 5, title: 'stageDevPlanning',             date: dateStr, time: '11:00 AM' });
+    if (currentStage >= 6) updates.push({ stage: 6, title: 'stageRecToMp',                 date: dateStr, time: '01:15 PM' });
+    if (currentStage >= 7) updates.push({ stage: 7, title: 'actionInitiatedUpdate',        date: dateStr, time: '04:00 PM' });
+
+    // Extract subcategory from title if not explicitly available
+    const subcategory = row.subcategory || (row.title && row.title.includes(':') ? row.title.split(':')[1].replace(/Issue$/i, '').trim() : 'Not Available');
+
+    // Determine priority based on severity or default to 'Medium'
+    const dbSeverity = row.severity || 'Medium'; // Can be Low, Medium, High, Critical
+    
+    // Dynamic calculation based on issue_id hash
+    let hash = 0;
+    const issueIdStr = row.issue_id || '';
+    for (let i = 0; i < issueIdStr.length; i++) {
+      hash = issueIdStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const score = 88 + (Math.abs(hash) % 10);
+    const confidenceScore = `${score}%`;
+
+    const affected = 50 + (Math.abs(hash) % 450) + (row.votes || 0) * 10;
+    const citizensAffected = `${affected}+`;
+
+    // Urgency level translation
+    const urgencyLabelKey = 'severity' + dbSeverity;
+    const urgencyTranslated = t[urgencyLabelKey] || dbSeverity;
+
+    const sentimentVal = t.sentimentConcerned || 'Concerned';
+
+    let cleanDescription = row.description || '';
+    if (cleanDescription) {
+      cleanDescription = cleanDescription.replace(/\n\[Image:\s*(.*?)\]/s, '');
+    }
+
+    return {
+      id:          row.reference_code || row.issue_id,
+      title:       row.title,
+      description: cleanDescription,
+      category:    row.category,
+      subcategory: subcategory,
+      location:    row.area || 'Not Available',
+      area:        row.area || 'Not Available',
+      city:        row.city || 'Not Available',
+      district:    row.district || 'Not Available',
+      state:       row.state || 'Not Available',
+      pincode:     row.pincode || 'Not Available',
+      submittedBy: row.citizen_name || 'Anonymous Citizen',
+      createdAt,
+      status: statusText,
+      currentStage,
+      priority: dbSeverity,
+      confidenceScore,
+      citizensAffected,
+      recommendedAction: t.actionModernization || 'Facility Modernization',
+      aiInsights: {
+        sentiment:      sentimentVal,
+        urgency:        urgencyTranslated,
+      },
+      coordinates: { 
+        lat: row.latitude ? parseFloat(row.latitude) : null, 
+        lng: row.longitude ? parseFloat(row.longitude) : null 
+      },
+      updates,
+    };
   };
 
-  const runSearchWithData = (cleanId, dataList) => {
+
+  // On mount: fetch latest IDs. 
+  // Process incoming route params, query params, or react-router history state.
+  useEffect(() => {
+    fetchLatestIssueIds();
+    
+    const queryId = searchParams.get('id');
+    console.log('TrackRequest Route parameter (id):', id);
+    console.log('TrackRequest Query parameter (id):', queryId);
+    console.log('TrackRequest State searchId:', location.state?.searchId);
+
+    const activeId = id || queryId || location.state?.searchId;
+    console.log('TrackRequest selected activeId:', activeId);
+
+    if (activeId) {
+      setSearchId(activeId);
+      searchSupabase(activeId);
+    } else {
+      fetchLatestIssue();
+    }
+  }, [id, searchParams, location.state]);
+
+  // Fetch latest notice matching category & area
+  useEffect(() => {
+    const fetchNotice = async () => {
+      if (!currentRequest || !currentRequest.area || !currentRequest.category) {
+        setLatestNotice(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('mp_notices')
+          .select('*')
+          .eq('area', currentRequest.area)
+          .eq('category', currentRequest.category)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching latest notice:', error);
+          setLatestNotice(null);
+        } else {
+          setLatestNotice(data);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching latest notice:', err);
+        setLatestNotice(null);
+      }
+    };
+
+    fetchNotice();
+  }, [currentRequest]);
+
+  // Query Supabase for an issue by reference_code OR issue_id
+  const searchSupabase = async (cleanId) => {
     if (!cleanId) return;
 
-    // Try finding in Hardcoded Mock Data
-    let matched = MOCK_TRACK_DATA[cleanId];
+    console.log('searchSupabase cleanId:', cleanId);
 
-    // If not found, try finding in Local Storage Priorities (id starts with p-)
-    if (!matched) {
-      const localMatched = dataList.find(p => p.id === cleanId || p.id.toLowerCase() === cleanId.toLowerCase());
-      
-      if (localMatched) {
-        // Map local storage status to stage number
-        let currentStage = 1;
-        let statusText = 'Submitted';
-        if (localMatched.status === 'In Progress') {
-          currentStage = 4;
-          statusText = 'Under Review';
-        } else if (localMatched.status === 'Resolved') {
-          currentStage = 7;
-          statusText = 'Action Initiated';
-        } else if (localMatched.status === 'Pending') {
-          // Semi-randomize stages 1-3 for pending requests based on creation date
-          const timeDiff = Date.now() - new Date(localMatched.createdAt).getTime();
-          if (timeDiff > 10 * 60 * 1000) { // older than 10 mins
-            currentStage = 3;
-            statusText = 'Priority Assessment';
-          } else if (timeDiff > 2 * 60 * 1000) { // older than 2 mins
-            currentStage = 2;
-            statusText = 'AI Analysis';
-          } else {
-            currentStage = 1;
-            statusText = 'Submitted';
-          }
-        }
-
-        // Generate mock AI data for custom submitted requests
-        const dateStr = new Date(localMatched.createdAt).toLocaleDateString(
-          language === 'en' ? 'en-US' : language === 'hi' ? 'hi-IN' : 'mr-IN',
-          { year: 'numeric', month: 'short', day: 'numeric' }
-        );
-
-        // Map updates
-        const updates = [
-          { stage: 1, title: 'complaintSubmittedUpdate', date: dateStr, time: '10:00 AM' }
-        ];
-        if (currentStage >= 2) {
-          updates.push({ stage: 2, title: 'aiAnalysisCompletedUpdate', date: dateStr, time: '10:05 AM' });
-        }
-        if (currentStage >= 3) {
-          updates.push({ stage: 3, title: 'priorityScoreGeneratedUpdate', date: dateStr, time: '10:15 AM' });
-        }
-        if (currentStage >= 4) {
-          updates.push({ stage: 4, title: 'reviewedByPlanningUpdate', date: dateStr, time: '02:30 PM' });
-        }
-        if (currentStage >= 7) {
-          updates.push({ stage: 5, title: 'stageDevPlanning', date: dateStr, time: '11:00 AM' });
-          updates.push({ stage: 6, title: 'stageRecToMp', date: dateStr, time: '01:15 PM' });
-          updates.push({ stage: 7, title: 'actionInitiatedUpdate', date: dateStr, time: '04:00 PM' });
-        }
-
-        matched = {
-          id: localMatched.id,
-          title: localMatched.title,
-          description: localMatched.description,
-          category: localMatched.category,
-          location: localMatched.location,
-          district: language === 'en' ? 'Local District' : language === 'hi' ? 'स्थानीय जिला' : 'स्थानिक जिल्हा',
-          state: language === 'en' ? 'State Territory' : language === 'hi' ? 'राज्य क्षेत्र' : 'राज्य क्षेत्र',
-          submittedBy: localMatched.submittedBy || 'Anonymous',
-          createdAt: localMatched.createdAt,
-          status: statusText,
-          currentStage,
-          priority: localMatched.category === 'Education' || localMatched.category === 'Healthcare' ? 'High' : 'Medium',
-          confidenceScore: '94%',
-          citizensAffected: localMatched.votes * 180 + '+',
-          recommendedAction: language === 'en' ? 'Facility Modernization' : language === 'hi' ? 'सुविधा आधुनिकीकरण' : 'सुविधा आधुनिकीकरण',
-          aiInsights: {
-            sentiment: language === 'en' ? 'Concerned' : language === 'hi' ? 'चिंतित' : 'काळजीयुक्त',
-            urgency: language === 'en' ? 'Medium-High' : language === 'hi' ? 'मध्यम-उच्च' : 'मध्यम-उच्च',
-            summary: language === 'en' 
-              ? 'Local citizen priority flagged for constituency assessment. AI validates category as high social impact.'
-              : language === 'hi'
-              ? 'निर्वाचन क्षेत्र के मूल्यांकन के लिए स्थानीय नागरिक प्राथमिकता को चिह्नित किया गया। एआई ने उच्च सामाजिक प्रभाव के रूप में श्रेणी को मान्य किया।'
-              : 'मतदारसंघ मूल्यांकनासाठी स्थानिक नागरिकांच्या समस्येची नोंद. एआयने या समस्येचे वर्गीकरण उच्च सामाजिक परिणाम म्हणून केले आहे.',
-            recommendation: language === 'en'
-              ? 'Inspect structural requirements and prepare local budget estimate for municipal dispatch.'
-              : language === 'hi'
-              ? 'संरचनात्मक आवश्यकताओं का निरीक्षण करें और नगर निगम प्रेषण के लिए स्थानीय बजट अनुमान तैयार करें।'
-              : 'रचनात्मक गरजांची पाहणी करा आणि पालिका मंजुरीसाठी अंदाजपत्रक तयार करा.'
-          },
-          coordinates: { lat: localMatched.lat || 28.6139, lng: localMatched.lng || 77.2090 },
-          updates
-        };
-      }
-    }
-
-    if (matched) {
-      setCurrentRequest(matched);
+    // Handle demo IDs directly from local mock data
+    if (MOCK_TRACK_DATA[cleanId]) {
+      setCurrentRequest(MOCK_TRACK_DATA[cleanId]);
       setErrorMsg('');
       setSearched(true);
-    } else {
+      return;
+    }
+
+    try {
+      // 1. Try searching by reference_code first
+      let { data, error } = await supabase
+        .from('issues')
+        .select('*')
+        .eq('reference_code', cleanId)
+        .maybeSingle();
+
+      console.log('Supabase response by reference_code:', data);
+
+      if (error) {
+        console.error('Supabase reference_code search error:', error);
+        throw error;
+      }
+
+      // 2. If not found by reference_code, try searching by issue_id (UUID)
+      if (!data) {
+        console.log('Not found by reference_code, trying issue_id...');
+        const result2 = await supabase
+          .from('issues')
+          .select('*')
+          .eq('issue_id', cleanId)
+          .maybeSingle();
+        
+        if (result2.error) {
+          console.error('Supabase issue_id search error:', result2.error);
+        } else {
+          data = result2.data;
+          console.log('Supabase response by issue_id:', data);
+        }
+      }
+
+      if (data) {
+        setCurrentRequest(mapSupabaseIssue(data));
+        setErrorMsg('');
+      } else {
+        setCurrentRequest(null);
+        setErrorMsg(t.noRequestFound);
+      }
+      setSearched(true);
+    } catch (err) {
+      console.error('TrackRequest Supabase search error:', err);
       setCurrentRequest(null);
       setErrorMsg(t.noRequestFound);
       setSearched(true);
     }
   };
-
-  // Fetch local storage priorities when page mounts
-  useEffect(() => {
-    const loadLocalData = async () => {
-      try {
-        const data = await db.getPriorities();
-        if (data) {
-          setLocalPriorities(data);
-          
-          // Check if there is an incoming searchId from routing state
-          if (location.state && location.state.searchId) {
-            setSearchId(location.state.searchId);
-            runSearchWithData(location.state.searchId, data);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching local priorities:', err);
-      }
-    };
-    loadLocalData();
-  }, [location.state]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -503,7 +646,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
       return;
     }
 
-    runSearchWithData(cleanId, localPriorities);
+    searchSupabase(cleanId);
   };
 
   const getStageStatus = (stageNum) => {
@@ -677,10 +820,9 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
               </p>
             )}
             
-            {/* Quick Demo Suggestions */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="text-[10px] uppercase font-bold opacity-60">Try Examples:</span>
-              {['JSA-2026-0001', 'JSA-2026-0002', 'JSA-2026-0003', 'JSA-2026-0004'].map((id) => (
+              {['JSA-DEMO-0001', 'JSA-DEMO-0002', 'JSA-DEMO-0003', 'JSA-DEMO-0004'].map((id) => (
                 <button
                   key={id}
                   type="button"
@@ -719,9 +861,9 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                 <div className={`p-5 rounded-full mb-4 ${highContrast ? 'bg-yellow-500/10 text-yellow-300' : 'bg-blue-55 text-[#000080]'}`}>
                   <FileText className="h-12 w-12" />
                 </div>
-                <h3 className="text-lg font-bold">Search for a Request ID</h3>
+                <h3 className="text-lg font-bold">{t.searchRequestTitle}</h3>
                 <p className="text-xs opacity-60 mt-1 max-w-xs mx-auto">
-                  Enter the complaint ID provided upon your request submission to view its real-time progress, AI categorization, and constituency roadmap.
+                  {t.searchRequestDesc}
                 </p>
               </div>
             </div>
@@ -738,7 +880,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                   <AlertCircle className="h-14 w-14" />
                 </div>
                 <h3 className="text-xl font-extrabold tracking-tight mb-2">
-                  {language === 'en' ? 'No Request Found' : language === 'hi' ? 'कोई अनुरोध नहीं मिला' : 'तक्रार आढळली नाही'}
+                  {t.noRequestFound}
                 </h3>
                 <p className="text-xs opacity-75 leading-relaxed max-w-sm mb-6">
                   {t.noRequestFound}
@@ -752,7 +894,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         : 'border-slate-300 text-slate-700 hover:bg-slate-55'
                     }`}
                   >
-                    Clear Input
+                    {t.clearInput}
                   </button>
                   <Link 
                     to="/"
@@ -762,7 +904,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         : 'bg-[#000080] hover:bg-blue-900 text-white'
                     }`}
                   >
-                    Register New Complaint
+                    {t.registerNewComplaint}
                   </Link>
                 </div>
               </div>
@@ -771,6 +913,84 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
             <div 
               className="space-y-8 transition-opacity duration-300"
             >
+              {/* Government-styled Card for MP Update */}
+              {latestNotice && (
+                <div className={`rounded-2xl border p-6 md:p-8 transition shadow-sm relative overflow-hidden ${
+                  highContrast 
+                    ? 'bg-[#1e293b] border-yellow-500/20 text-yellow-300' 
+                    : 'bg-gradient-to-r from-blue-50/50 via-white to-emerald-50/30 border-slate-200 text-slate-800'
+                }`}>
+                  {/* Tricolor accent bar */}
+                  <div className="absolute top-0 left-0 right-0 h-1 flex">
+                    <div className="bg-[#FF9933] flex-1"></div>
+                    <div className="bg-white flex-1"></div>
+                    <div className="bg-[#138808] flex-1"></div>
+                  </div>
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xl">📢</span>
+                      <h4 className={`text-base font-black tracking-tight ${
+                        highContrast ? 'text-yellow-300' : 'text-[#000080]'
+                      }`}>
+                        {language === 'en' ? 'Official MP Update' : language === 'hi' ? 'आधिकारिक सांसद अपडेट' : 'अधिकृत खासदार अपडेट'}
+                      </h4>
+                    </div>
+                    {/* Emblem watermark or badge */}
+                    <div className="flex items-center space-x-1.5 opacity-80">
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
+                        alt="Emblem"
+                        className="h-6 w-auto opacity-70 pointer-events-none select-none"
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF9933]">
+                        {language === 'en' ? 'GOVT OF INDIA' : language === 'hi' ? 'भारत सरकार' : 'भारत सरकार'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Notice Content */}
+                  <div className="mb-4">
+                    <p className={`text-sm font-semibold leading-relaxed ${
+                      highContrast ? 'text-yellow-100' : 'text-slate-755'
+                    }`}>
+                      {latestNotice.notice}
+                    </p>
+                  </div>
+
+                  {/* Divider line */}
+                  <div className="border-t border-slate-100 dark:border-slate-800/60 my-3"></div>
+
+                  {/* Footer Info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
+                      {/* MP Name */}
+                      <div className="flex items-center space-x-1 font-bold">
+                        <User className="h-3.5 w-3.5 text-[#FF9933]" />
+                        <span className="text-slate-700 dark:text-slate-350">{latestNotice.mp_name}</span>
+                      </div>
+                      {/* Constituency */}
+                      <div className="flex items-center space-x-1 font-semibold">
+                        <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{latestNotice.constituency}</span>
+                      </div>
+                    </div>
+
+                    {/* Published Date */}
+                    <div className="flex items-center space-x-1 text-slate-500 dark:text-slate-400 font-semibold self-start sm:self-auto">
+                      <Calendar className="h-3.5 w-3.5 text-[#138808]" />
+                      <span>
+                        {language === 'en' ? 'Published: ' : language === 'hi' ? 'प्रकाशित: ' : 'प्रसिद्धी तारीख: '}
+                        {new Date(latestNotice.created_at).toLocaleDateString(
+                          language === 'en' ? 'en-IN' : `${language}-IN`,
+                          { year: 'numeric', month: 'short', day: 'numeric' }
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* VISUAL PROGRESS TRACKER */}
               <div className={`rounded-2xl border p-6 md:p-8 transition shadow-sm ${
@@ -782,7 +1002,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                   highContrast ? 'text-yellow-300' : 'text-slate-800'
                 }`}>
                   <TrendingUp className="h-5 w-5 text-[#FF9933]" />
-                  <span>{language === 'en' ? 'Roadmap Timeline' : language === 'hi' ? 'रोडमैप समयरेखा' : 'रोडमॅप टाइमलाईन'}</span>
+                  <span>{t.roadmapTimeline}</span>
                 </h3>
 
                 {/* Horizontal Timeline (Desktop & Medium Screens) */}
@@ -922,7 +1142,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                       highContrast ? 'text-yellow-300' : 'text-slate-800'
                     }`}>
                       <FileText className="h-5 w-5 text-[#000080]" />
-                      <span>{language === 'en' ? 'Request Details' : language === 'hi' ? 'अनुरोध विवरण' : 'तक्रारीचा तपशील'}</span>
+                      <span>{t.requestDetailsLabel}</span>
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -940,11 +1160,17 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-bold opacity-60 block mb-1">
+                          {t.subCategoryLabel}
+                        </span>
+                        <span className="text-sm font-semibold">{currentRequest.subcategory || 'Not Available'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold opacity-60 block mb-1">
                           {t.submissionDateLabel}
                         </span>
                         <span className="text-sm font-semibold">
                           {new Date(currentRequest.createdAt).toLocaleDateString(
-                            language === 'en' ? 'en-US' : language === 'hi' ? 'hi-IN' : 'mr-IN',
+                            language === 'en' ? 'en-IN' : `${language}-IN`,
                             { year: 'numeric', month: 'long', day: 'numeric' }
                           )}
                         </span>
@@ -956,6 +1182,20 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         <span className="text-sm font-semibold flex items-center space-x-1">
                           <User className="h-4 w-4 opacity-50 shrink-0" />
                           <span>{currentRequest.submittedBy}</span>
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold opacity-60 block mb-1">
+                          {t.currentStatusLabel}
+                        </span>
+                        <span className={`inline-block px-3 py-0.5 rounded-full text-xs font-black uppercase ${
+                          currentRequest.status === 'Action Initiated' || currentRequest.status === 'All stages completed'
+                            ? (highContrast ? 'bg-emerald-955 text-emerald-400 border border-emerald-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
+                            : currentRequest.status === 'Under Review' || currentRequest.status === 'AI Analysis' || currentRequest.status === 'Development Planning'
+                            ? (highContrast ? 'bg-amber-955 text-amber-400 border border-amber-400' : 'bg-amber-50 text-amber-700 border border-amber-200')
+                            : (highContrast ? 'bg-slate-900 text-yellow-300 border border-yellow-300' : 'bg-slate-100 text-slate-700 border border-slate-200')
+                        }`}>
+                          {currentRequest.status}
                         </span>
                       </div>
                     </div>
@@ -999,7 +1239,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         ? 'bg-[#0f172a] border-yellow-500/30 text-yellow-300' 
                         : 'bg-[#FF9933]/5 border-[#FF9933]/20 text-[#000080]'
                     }`}>
-                      <strong>{language === 'en' ? 'Core Insight:' : language === 'hi' ? 'मुख्य अंतर्दृष्टि:' : 'मुख्य निष्कर्ष:'}</strong> {currentRequest.id === 'JSA-2026-0001' ? 
+                      <strong>{language === 'en' ? 'Core Insight:' : language === 'hi' ? 'मुख्य अंतर्दृष्टि:' : 'मुख्य निष्कर्ष:'}</strong> {currentRequest.id === 'JSA-DEMO-0001' ? 
                         `Multiple complaints from this locality indicate recurring water supply issues. Based on complaint frequency and affected population, this issue has been assigned High Priority and recommended for constituency planning.` :
                         `The AI engine indicates this report relates to ${currentRequest.category.toLowerCase()} development. The citizen priority rating is supported by a community engagement score of ${currentRequest.confidenceScore}.`
                       }
@@ -1030,22 +1270,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                       </div>
                     </div>
 
-                    <div className="mt-5 border-t pt-5 border-slate-100/10 space-y-3.5">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold opacity-60 block mb-1">
-                          {t.aiSummaryLabel}
-                        </span>
-                        <p className="text-xs leading-relaxed opacity-90">{currentRequest.aiInsights.summary}</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase font-bold opacity-60 block mb-1">
-                          {t.recommendationLabel}
-                        </span>
-                        <p className="text-xs leading-relaxed font-semibold text-slate-800 dark:text-yellow-200">
-                          {currentRequest.aiInsights.recommendation}
-                        </p>
-                      </div>
-                    </div>
+
                   </div>
 
                 </div>
@@ -1064,20 +1289,20 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                       highContrast ? 'text-yellow-300' : 'text-slate-800'
                     }`}>
                       <Info className="h-5 w-5 text-[#000080]" />
-                      <span>{language === 'en' ? 'Status Summary' : language === 'hi' ? 'स्थिति सारांश' : 'स्थिती सारांश'}</span>
+                      <span>{t.statusSummaryTitle}</span>
                     </h3>
 
                     <div className="space-y-5 text-xs">
                       <div>
                         <span className="opacity-60 block font-bold mb-1 uppercase tracking-wide text-[9px]">{t.currentStatusLabel}</span>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-black uppercase ${
-                          currentRequest.status === 'Action Initiated'
-                            ? (highContrast ? 'bg-emerald-950 text-emerald-400 border border-emerald-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
+                          currentRequest.status === 'Action Initiated' || currentRequest.status === 'All stages completed'
+                            ? (highContrast ? 'bg-emerald-955 text-emerald-400 border border-emerald-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
                             : currentRequest.status === 'Under Review' || currentRequest.status === 'AI Analysis' || currentRequest.status === 'Development Planning'
-                            ? (highContrast ? 'bg-amber-950 text-amber-400 border border-amber-400' : 'bg-amber-50 text-amber-700 border border-amber-200')
+                            ? (highContrast ? 'bg-amber-955 text-amber-400 border border-amber-400' : 'bg-amber-50 text-amber-700 border border-amber-200')
                             : (highContrast ? 'bg-slate-900 text-yellow-300 border border-yellow-300' : 'bg-slate-100 text-slate-700 border border-slate-200')
                         }`}>
-                          {getStageTitle(currentRequest.currentStage)}
+                          {currentRequest.status}
                         </span>
                       </div>
 
@@ -1141,7 +1366,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         className={`flex-1 flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl border text-xs font-black transition cursor-pointer select-none ${
                           highContrast
                             ? 'bg-slate-900 border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-300'
-                            : 'bg-slate-50 border-slate-300 hover:bg-slate-100 text-slate-700'
+                            : 'bg-slate-55 border-slate-300 hover:bg-slate-100 text-slate-700'
                         }`}
                       >
                         {detecting ? (
@@ -1149,30 +1374,38 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                         ) : (
                           <Compass className="h-4 w-4 text-blue-600" />
                         )}
-                        <span>{detecting ? 'Locating...' : 'Detect My Location'}</span>
+                        <span>{detecting ? t.detectingText : t.detectMyLocationBtn}</span>
                       </button>
                     </div>
 
                     <div className={`p-2.5 rounded-lg border text-[10px] font-bold flex justify-between items-center mb-4 ${
-                      highContrast ? 'bg-[#0f172a] border-yellow-500/20 text-yellow-300' : 'bg-slate-50 border-slate-200 text-slate-600'
+                      highContrast ? 'bg-[#0f172a] border-yellow-500/20 text-yellow-300' : 'bg-slate-55 border-slate-200 text-slate-600'
                     }`}>
-                      <span>Lat: {(currentRequest.coordinates?.lat || currentRequest.lat || 28.6139).toFixed(5)}</span>
-                      <span>Lng: {(currentRequest.coordinates?.lng || currentRequest.lng || 77.2090).toFixed(5)}</span>
-                      <span className="text-[#FF9933] font-extrabold uppercase animate-pulse">GPS Stream Active</span>
+                      <span>Lat: {typeof currentRequest.coordinates?.lat === 'number' ? currentRequest.coordinates.lat.toFixed(5) : 'Not Available'}</span>
+                      <span>Lng: {typeof currentRequest.coordinates?.lng === 'number' ? currentRequest.coordinates.lng.toFixed(5) : 'Not Available'}</span>
+                      <span className="text-[#FF9933] font-extrabold uppercase animate-pulse">{t.gpsStreamActive}</span>
                     </div>
 
-                    <div className="space-y-2 text-xs">
+                    <div className="space-y-2 text-xs text-left">
                       <div className="flex justify-between py-1 border-b border-slate-100/5">
-                        <span className="opacity-70 font-semibold">{language === 'en' ? 'Complaint Location' : language === 'hi' ? 'शिकायत का स्थान' : 'तक्रारीचे ठिकाण'}:</span>
-                        <span className="font-bold">{currentRequest.location}</span>
+                        <span className="opacity-70 font-semibold">📍 {t.labelArea || 'Area'}:</span>
+                        <span className="font-bold">{currentRequest.area || 'Not Available'}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-100/5">
-                        <span className="opacity-70 font-semibold">{language === 'en' ? 'District' : language === 'hi' ? 'जिला' : 'जिल्हा'}:</span>
-                        <span className="font-bold">{currentRequest.district}</span>
+                        <span className="opacity-70 font-semibold">🏙 {t.labelCity || 'City'}:</span>
+                        <span className="font-bold">{currentRequest.city || 'Not Available'}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-100/5">
+                        <span className="opacity-70 font-semibold">🗺 {t.labelDistrict || 'District'}:</span>
+                        <span className="font-bold">{currentRequest.district || 'Not Available'}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-100/5">
+                        <span className="opacity-70 font-semibold">📍 {t.labelState || 'State'}:</span>
+                        <span className="font-bold">{currentRequest.state || 'Not Available'}</span>
                       </div>
                       <div className="flex justify-between py-1">
-                        <span className="opacity-70 font-semibold">{language === 'en' ? 'State' : language === 'hi' ? 'राज्य' : 'राज्य'}:</span>
-                        <span className="font-bold">{currentRequest.state}</span>
+                        <span className="opacity-70 font-semibold">📮 {t.labelPincode || 'Pincode'}:</span>
+                        <span className="font-bold">{currentRequest.pincode || 'Not Available'}</span>
                       </div>
                     </div>
                   </div>
@@ -1299,13 +1532,13 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                     <img src={emblemOfIndia} alt="National Emblem of India" className="h-20 w-auto select-none pointer-events-none object-contain" />
                   </div>
                   <h1 className="text-xs font-black tracking-widest text-[#000080] uppercase">
-                    Government of India
+                    {t.goiText}
                   </h1>
                   <h2 className="text-sm font-extrabold text-[#000080] tracking-tight mt-1">
                     JanSetu AI
                   </h2>
                   <p className="text-[10px] tracking-wide text-slate-500 font-bold uppercase mt-1">
-                    AI-Powered Constituency Development Platform
+                    {t.devPlatformSub}
                   </p>
                 </div>
 
@@ -1345,7 +1578,9 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
                       <span className="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
                         {t.locationLabel}
                       </span>
-                      <span className="font-black text-slate-800">{currentRequest.location}</span>
+                      <span className="font-black text-slate-800">
+                        {[currentRequest.area, currentRequest.city, currentRequest.district, currentRequest.state, currentRequest.pincode].filter(val => val && val !== 'Not Available').join(', ') || 'Not Available'}
+                      </span>
                     </div>
                     <div>
                       <span className="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-0.5">
@@ -1359,7 +1594,7 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
 
                   <div className="border-t pt-3">
                     <span className="font-bold block text-slate-500 text-[9px] uppercase tracking-wide mb-1">
-                      {language === 'en' ? 'Description' : language === 'hi' ? 'विवरण' : 'विवरण'}
+                      {t.descLabel}
                     </span>
                     <p className="text-[11px] leading-relaxed text-slate-700 italic bg-slate-50 p-2.5 rounded border border-slate-200">
                       "{currentRequest.description}"
@@ -1388,15 +1623,15 @@ export default function TrackRequest({ language, fontSize, highContrast }) {
 
                 <div className="border-t-2 border-slate-800 pt-6 mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[9px] relative z-10">
                   <div className="max-w-xs text-slate-400">
-                    <p className="font-bold">Disclaimer:</p>
+                    <p className="font-bold">{t.receiptDisclaimerLabel}</p>
                     <p className="leading-tight mt-0.5">
-                      This is a digitally generated acknowledgement receipt from the JanSetu AI portal. No physical signature is required. All records are secured using cryptographic hashes on government servers.
+                      {t.receiptDisclaimerText}
                     </p>
                   </div>
                   <div className="text-right self-end sm:self-auto border border-dashed border-slate-400 p-2 rounded bg-slate-50">
-                    <div className="font-black text-[#000080] uppercase tracking-wider">JanSetu AI Secure</div>
-                    <div className="text-slate-400 font-mono mt-0.5">REF: {currentRequest.id.substring(4)}</div>
-                    <div className="text-slate-400">STATUS: VERIFIED</div>
+                    <div className="font-black text-[#000080] uppercase tracking-wider">{t.receiptSecureLabel}</div>
+                    <div className="text-slate-400 font-mono mt-0.5">REF: {currentRequest.id ? currentRequest.id.substring(4) : 'N/A'}</div>
+                    <div className="text-slate-400">{t.receiptStatusVerified}</div>
                   </div>
                 </div>
               </div>
