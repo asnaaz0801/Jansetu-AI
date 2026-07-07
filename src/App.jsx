@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import CitizenPortal from './pages/CitizenPortal';
 import { supabase } from './lib/db';
@@ -51,6 +51,24 @@ function MpEntryRedirect() {
 
 function SessionManager({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect MP away from citizen routes on any route change if logged in
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('mp_session');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.loggedIn) {
+          if (!location.pathname.startsWith('/mp/') || location.pathname === '/mp/login') {
+            navigate('/mp/dashboard', { replace: true });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error in SessionManager route enforcement:", e);
+    }
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -79,10 +97,11 @@ function SessionManager({ children }) {
             if (!currentSession || currentSession !== JSON.stringify(sessionData)) {
               localStorage.setItem('mp_session', JSON.stringify(sessionData));
               window.dispatchEvent(new Event('mp_session_change'));
+            }
 
-              if (!window.location.pathname.startsWith('/mp/') || window.location.pathname === '/mp/login') {
-                navigate('/mp/dashboard');
-              }
+            // Always enforce redirect to MP dashboard if on citizen pages or MP login
+            if (!window.location.pathname.startsWith('/mp/') || window.location.pathname === '/mp/login') {
+              navigate('/mp/dashboard');
             }
           } else {
             if (localStorage.getItem('mp_session')) {

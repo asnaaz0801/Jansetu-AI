@@ -10,7 +10,7 @@ export default function ProtectedRoute() {
   }
 
   if (!session || !session.loggedIn) {
-    return <Navigate to="/mp/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

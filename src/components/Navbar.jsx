@@ -66,6 +66,38 @@ export default function Navbar({
     { name: t.help, id: 'support' },
   ];
 
+  const isItemActive = (item) => {
+    if (item.id === 'main-card' && location.pathname === '/submit') return true;
+    if (item.id === 'active-feed' && (location.pathname === '/track' || location.pathname.startsWith('/track/'))) return true;
+    if (item.id === 'support' && location.pathname === '/support') return true;
+    if (item.id === 'hero' && location.pathname === '/') return true;
+    return false;
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/' && location.state?.scrollTo) {
+      const sectionId = location.state.scrollTo;
+      const timer = setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const offset = 80; // height of sticky navbar
+          const bodyRect = document.body.getBoundingClientRect().top;
+          const elementRect = element.getBoundingClientRect().top;
+          const elementPosition = elementRect - bodyRect;
+          const offsetPosition = elementPosition - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+          // Clear state to prevent scrolling again on page refresh
+          window.history.replaceState({}, document.title);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, location.state]);
+
   const handleNavClick = (sectionId) => {
     setIsOpen(false);
     if (sectionId === 'active-feed') {
@@ -80,18 +112,24 @@ export default function Navbar({
       navigate('/support');
       return;
     }
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offset = 80; // height of sticky navbar
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
+    // Anchor links: 'hero', 'insights-section', 'about-section'
+    if (location.pathname !== '/') {
+      navigate('/', { state: { scrollTo: sectionId } });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        const offset = 80; // height of sticky navbar
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = element.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
@@ -233,58 +271,23 @@ export default function Navbar({
 
             {/* Desktop Navigation Items */}
             <div className="hidden lg:flex items-center space-x-1">
-              {location.pathname === '/' ? (
-                // On home page, use smooth scrolling sections
-                citizenNavItems.map((item) => (
+              {citizenNavItems.map((item) => {
+                const isActive = isItemActive(item);
+                return (
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
                     className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-102 cursor-pointer ${
-                      highContrast
-                        ? 'text-yellow-200 hover:bg-yellow-500/10 hover:text-yellow-400'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-[#000080]'
+                      isActive
+                        ? (highContrast ? 'bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500' : 'bg-slate-100 text-[#000080] font-bold')
+                        : (highContrast ? 'text-yellow-200 hover:bg-yellow-500/10 hover:text-yellow-400' : 'text-slate-600 hover:bg-slate-100 hover:text-[#000080]')
                     }`}
                   >
                     {item.name}
                   </button>
-                ))
-              ) : (
-                // Outside home page, redirect to home, submit or track
-                <>
-                  <Link
-                    to="/"
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                      highContrast
-                        ? 'text-yellow-200 hover:bg-yellow-500/10'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-[#000080]'
-                    }`}
-                  >
-                    {t.home}
-                  </Link>
-                  <Link
-                    to="/submit"
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                      location.pathname === '/submit'
-                        ? (highContrast ? 'bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500' : 'bg-slate-100 text-[#000080] font-bold')
-                        : (highContrast ? 'text-yellow-200 hover:bg-yellow-500/10' : 'text-slate-600 hover:bg-slate-100 hover:text-[#000080]')
-                    }`}
-                  >
-                    {t.submitIssue}
-                  </Link>
-                  <Link
-                    to="/track"
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                      location.pathname === '/track'
-                        ? (highContrast ? 'bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500' : 'bg-slate-100 text-[#000080] font-bold')
-                        : (highContrast ? 'text-yellow-200 hover:bg-yellow-500/10' : 'text-slate-600 hover:bg-slate-100 hover:text-[#000080]')
-                    }`}
-                  >
-                    {t.trackRequest}
-                  </Link>
-                </>
-              )}
-
-
+                );
+              })}
+            </div>
 
               {/* Language Selector Dropdown */}
               <div className="relative ml-4">
@@ -489,7 +492,6 @@ export default function Navbar({
                   </button>
                 )}
               </div>
-            </div>
 
             {/* Mobile Menu & Language Toggle Button */}
             <div className="flex items-center space-x-2.5 lg:hidden">
@@ -567,49 +569,22 @@ export default function Navbar({
             highContrast ? 'bg-[#0f172a] border-yellow-500 text-yellow-300' : 'bg-white border-slate-100 text-slate-700'
           }`}>
             <div className="px-3 pt-2.5 pb-4 space-y-1 sm:px-4">
-              {location.pathname === '/' ? (
-                citizenNavItems.map((item) => (
+              {citizenNavItems.map((item) => {
+                const isActive = isItemActive(item);
+                return (
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className="w-full flex items-center px-4 py-3 rounded-xl text-base font-semibold text-left transition hover:bg-slate-100 cursor-pointer"
+                    className={`w-full flex items-center px-4 py-3 rounded-xl text-base font-semibold text-left transition hover:bg-slate-100 cursor-pointer ${
+                      isActive
+                        ? (highContrast ? 'text-yellow-400 font-bold' : 'text-[#000080] font-bold')
+                        : (highContrast ? 'text-yellow-300' : 'text-slate-700')
+                    }`}
                   >
                     {item.name}
                   </button>
-                ))
-              ) : (
-                <>
-                  <Link
-                    to="/"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-4 py-3 rounded-xl text-base font-semibold transition hover:bg-slate-100"
-                  >
-                    {t.home}
-                  </Link>
-                  <Link
-                    to="/submit"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-base font-semibold transition hover:bg-slate-100 ${
-                      location.pathname === '/submit'
-                        ? (highContrast ? 'text-yellow-400 font-bold' : 'text-[#000080] font-bold')
-                        : ''
-                    }`}
-                  >
-                    {t.submitIssue}
-                  </Link>
-                  <Link
-                    to="/track"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-base font-semibold transition hover:bg-slate-100 ${
-                      location.pathname === '/track'
-                        ? (highContrast ? 'text-yellow-400 font-bold' : 'text-[#000080] font-bold')
-                        : ''
-                    }`}
-                  >
-                    {t.trackRequest}
-                  </Link>
-                </>
-              )}
+                );
+              })}
 
               {/* Mobile Auth inside Drawer */}
               <div className="pt-4 pb-2 border-t border-slate-100/10 px-4">
