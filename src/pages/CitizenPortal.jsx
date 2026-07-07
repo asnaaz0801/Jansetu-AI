@@ -1,5 +1,5 @@
 import { translations } from '../lib/translations';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   TrendingUp,
@@ -9,6 +9,7 @@ import {
 
 export default function CitizenPortal({ language, highContrast }) {
   const t = translations[language];
+  const navigate = useNavigate();
 
   return (
     <div className={`flex-1 transition-colors duration-200 flex flex-col justify-between ${highContrast ? 'bg-[#0f172a]' : 'bg-[#F8FAFC]'
@@ -177,16 +178,28 @@ export default function CitizenPortal({ language, highContrast }) {
             <p className={`font-bold text-sm ${highContrast ? 'text-yellow-300' : 'text-white'}`}>
               {t.goiText}
             </p>
-            <p className="text-xs opacity-75">
-              {t.poweredBy}
-            </p>
           </div>
 
           {/* Links */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold uppercase tracking-wider">
-            <button className="hover:underline transition cursor-pointer">{t.privacy}</button>
-            <button className="hover:underline transition cursor-pointer">{t.terms}</button>
-            <button className="hover:underline transition cursor-pointer">{t.contact}</button>
+            <button 
+              onClick={() => navigate('/privacy-policy')}
+              className="hover:underline transition cursor-pointer"
+            >
+              {t.privacy}
+            </button>
+            <button 
+              onClick={() => navigate('/terms-of-use')}
+              className="hover:underline transition cursor-pointer"
+            >
+              {t.terms}
+            </button>
+            <button 
+              onClick={() => navigate('/support')} 
+              className="hover:underline transition cursor-pointer"
+            >
+              {t.contact}
+            </button>
           </div>
 
           <div className="text-center md:text-right text-xs opacity-60">

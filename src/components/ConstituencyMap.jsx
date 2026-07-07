@@ -755,7 +755,7 @@ export default function ConstituencyMap({
         
         {/* Layer Toggles */}
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer select-none hover:text-slate-800 dark:hover:text-white transition">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-black dark:text-black hover:text-slate-900 dark:hover:text-slate-900 transition">
             <input
               type="checkbox"
               checked={showHeatmap}
@@ -768,7 +768,7 @@ export default function ConstituencyMap({
             </span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none hover:text-slate-800 dark:hover:text-white transition">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-black dark:text-black hover:text-slate-900 dark:hover:text-slate-900 transition">
             <input
               type="checkbox"
               checked={showMarkers}

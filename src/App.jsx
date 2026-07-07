@@ -12,6 +12,9 @@ import MpLayout from './components/MpLayout';
 import MpComplaints from './pages/MpComplaints';
 import MpComplaintDetails from './pages/MpComplaintDetails';
 import MpAnalytics from './pages/MpAnalytics';
+import HelpSupport from './pages/HelpSupport';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 
 function CitizenLayout({ language, setLanguage, fontSize, setFontSize, highContrast, setHighContrast }) {
   return (
@@ -193,6 +196,34 @@ function App() {
               } />
               <Route path="/track/:id" element={
                 <TrackRequest 
+                  language={language}
+                  fontSize={fontSize}
+                  highContrast={highContrast}
+                />
+              } />
+              <Route path="/support" element={
+                <HelpSupport 
+                  language={language}
+                  fontSize={fontSize}
+                  highContrast={highContrast}
+                />
+              } />
+              <Route path="/notices" element={
+                <TrackRequest 
+                  language={language}
+                  fontSize={fontSize}
+                  highContrast={highContrast}
+                />
+              } />
+              <Route path="/privacy-policy" element={
+                <PrivacyPolicy 
+                  language={language}
+                  fontSize={fontSize}
+                  highContrast={highContrast}
+                />
+              } />
+              <Route path="/terms-of-use" element={
+                <TermsOfUse 
                   language={language}
                   fontSize={fontSize}
                   highContrast={highContrast}

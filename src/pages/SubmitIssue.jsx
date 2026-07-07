@@ -179,6 +179,26 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Automatically determine severity based on impact
+  useEffect(() => {
+    switch (impact) {
+      case '1-50':
+        setSeverity('Low');
+        break;
+      case '50-200':
+        setSeverity('Medium');
+        break;
+      case '200-1000':
+        setSeverity('High');
+        break;
+      case '1000+':
+        setSeverity('Critical');
+        break;
+      default:
+        break;
+    }
+  }, [impact]);
+
   // Helper variables
   const fileInputRef = useRef(null);
 
@@ -1325,48 +1345,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             </div>
           )}
 
-          {/* STEP 3: ISSUE SEVERITY */}
-          <div 
-            className={`rounded-2xl border p-6 md:p-8 transition shadow-sm ${
-              highContrast ? 'bg-[#1e293b] border-yellow-500/20' : 'bg-white border-slate-200'
-            }`}
-          >
-            <h3 className={`text-xs font-black uppercase tracking-wider mb-5 flex items-center space-x-2 ${
-              highContrast ? 'text-yellow-300' : 'text-slate-700'
-            }`}>
-              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">3</span>
-              <span>{t.step3Title}</span>
-            </h3>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {severitiesList.map((sev) => {
-                const isSelected = severity === sev.id;
-                return (
-                  <button
-                    key={sev.id}
-                    type="button"
-                    onClick={() => setSeverity(sev.id)}
-                    className={`p-4.5 rounded-xl border flex flex-col items-center justify-center text-center transition cursor-pointer ${
-                      isSelected
-                        ? (highContrast 
-                            ? 'border-yellow-400 bg-yellow-500/10 text-yellow-300 font-extrabold ring-2 ring-yellow-400' 
-                            : 'border-slate-350 bg-slate-100/50 text-slate-900 ring-2 ring-slate-800 font-extrabold scale-102')
-                        : (highContrast 
-                            ? 'border-slate-700 text-slate-400' 
-                            : 'border-slate-200 text-slate-500 bg-slate-50/50')
-                    }`}
-                  >
-                    <span className="flex items-center space-x-1.5 mb-1 text-xs">
-                      <span className={`h-2.5 w-2.5 rounded-full ${sev.color}`} />
-                      <span className="font-extrabold">{t[sev.text]}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* STEP 4: ESTIMATED IMPACT */}
+          {/* STEP 3: ESTIMATED IMPACT */}
           <div 
             className={`rounded-2xl border p-6 md:p-8 transition shadow-sm ${
               highContrast ? 'bg-[#1e293b] border-yellow-500/20' : 'bg-white border-slate-200'
@@ -1375,10 +1354,10 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             <h3 className={`text-xs font-black uppercase tracking-wider mb-2 flex items-center space-x-2 ${
               highContrast ? 'text-yellow-300' : 'text-slate-700'
             }`}>
-              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">4</span>
-              <span>{t.step4Title}</span>
+              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">3</span>
+              <span>{t.step3Title}</span>
             </h3>
-            <p className="text-xs opacity-75 mb-5 ml-7">{t.step4Question}</p>
+            <p className="text-xs opacity-75 mb-5 ml-7">{t.step3Question}</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {impactsList.map((imp) => {
@@ -1401,6 +1380,46 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
                   >
                     <span className="text-xs font-extrabold">{localizedImpact}</span>
                   </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 4: ISSUE SEVERITY */}
+          <div 
+            className={`rounded-2xl border p-6 md:p-8 transition shadow-sm ${
+              highContrast ? 'bg-[#1e293b] border-yellow-500/20' : 'bg-white border-slate-200'
+            }`}
+          >
+            <h3 className={`text-xs font-black uppercase tracking-wider mb-2 flex items-center space-x-2 ${
+              highContrast ? 'text-yellow-300' : 'text-slate-700'
+            }`}>
+              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">4</span>
+              <span>{t.step4Title}</span>
+            </h3>
+            <p className="text-xs opacity-75 mb-5 ml-7">{t.step4Helper}</p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {severitiesList.map((sev) => {
+                const isSelected = severity === sev.id;
+                return (
+                  <div
+                    key={sev.id}
+                    className={`p-4.5 rounded-xl border flex flex-col items-center justify-center text-center transition cursor-default pointer-events-none ${
+                      isSelected
+                        ? (highContrast 
+                            ? 'border-yellow-400 bg-yellow-500/10 text-yellow-300 font-extrabold ring-2 ring-yellow-400' 
+                            : 'border-slate-350 bg-slate-100/50 text-slate-900 ring-2 ring-slate-800 font-extrabold scale-102')
+                        : (highContrast 
+                            ? 'border-slate-700 text-slate-400' 
+                            : 'border-slate-200 text-slate-500 bg-slate-50/50')
+                    }`}
+                  >
+                    <span className="flex items-center space-x-1.5 mb-1 text-xs">
+                      <span className={`h-2.5 w-2.5 rounded-full ${sev.color}`} />
+                      <span className="font-extrabold">{t[sev.text]}</span>
+                    </span>
+                  </div>
                 );
               })}
             </div>
@@ -1687,33 +1706,7 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             </div>
 
           </div>
-
-          {/* STEP 6: WHY THIS INFORMATION MATTERS */}
-          <div 
-            className={`rounded-2xl border p-6 md:p-8 transition shadow-sm relative overflow-hidden ${
-              highContrast ? 'bg-[#1e293b] border-yellow-500/20' : 'bg-white border-slate-200'
-            }`}
-          >
-            {/* Tricolor corner ribbon */}
-            <div className="absolute top-0 left-0 right-0 h-1 flex">
-              <div className="bg-[#FF9933] flex-1"></div>
-              <div className="bg-white w-1/12"></div>
-              <div className="bg-[#138808] flex-1"></div>
-            </div>
-
-            <h3 className={`text-xs font-black uppercase tracking-wider mb-3 flex items-center space-x-2 ${
-              highContrast ? 'text-yellow-300' : 'text-slate-700'
-            }`}>
-              <Info className="h-5 w-5 text-[#000080]" />
-              <span>{t.step6Title}</span>
-            </h3>
-            
-            <p className="text-xs leading-relaxed opacity-85 pl-7 text-justify">
-              {t.step9Text}
-            </p>
-          </div>
-
-          {/* STEP 7: REVIEW SUBMISSION */}
+          {/* STEP 6: REVIEW SUBMISSION */}
           <div 
             className={`rounded-2xl border p-6 md:p-8 transition shadow-sm ${
               highContrast ? 'bg-[#1e293b] border-yellow-500/20' : 'bg-white border-slate-200'
@@ -1722,8 +1715,8 @@ export default function SubmitIssue({ language, fontSize, highContrast }) {
             <h3 className={`text-xs font-black uppercase tracking-wider mb-5 flex items-center space-x-2 ${
               highContrast ? 'text-yellow-300' : 'text-slate-700'
             }`}>
-              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">7</span>
-              <span>{t.step7Title}</span>
+              <span className="h-5 w-5 rounded-full bg-[#000080] text-white flex items-center justify-center text-[10px] font-black mr-1">6</span>
+              <span>{t.step6ReviewTitle}</span>
             </h3>
 
             {/* Structured Summary Review Container */}

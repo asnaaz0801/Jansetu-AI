@@ -63,7 +63,7 @@ export default function Navbar({
     { name: t.trackRequest, id: 'active-feed' },
     { name: t.insights, id: 'insights-section' },
     { name: t.about, id: 'about-section' },
-    { name: t.help, id: 'footer' },
+    { name: t.help, id: 'support' },
   ];
 
   const handleNavClick = (sectionId) => {
@@ -74,6 +74,10 @@ export default function Navbar({
     }
     if (sectionId === 'main-card') {
       navigate('/submit');
+      return;
+    }
+    if (sectionId === 'support') {
+      navigate('/support');
       return;
     }
     const element = document.getElementById(sectionId);
